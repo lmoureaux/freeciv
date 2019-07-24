@@ -87,7 +87,8 @@ enum shortcut_id {
   SC_RELOAD_LUA = 54,
   SC_ZOOM_RESET = 55,
   SC_GOBUILDCITY = 56,
-  SC_GOJOINCITY = 57
+  SC_GOJOINCITY = 57,
+  SC_RALLY_POINTS = 58,
 };
 
 

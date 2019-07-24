@@ -1082,6 +1082,12 @@ void mr_menu::setup_menus()
   act->setShortcut(QKeySequence(shortcut_to_string(
                    fc_shortcuts::sc()->get_shortcut(SC_TRADE_ROUTES))));
   connect(act, &QAction::triggered, this, &mr_menu::slot_city_traderoutes);
+  act = menu->addAction(_("City Rally Points"));
+  act->setCheckable(true);
+  act->setChecked(gui_options.draw_city_rally_points);
+  act->setShortcut(QKeySequence(shortcut_to_string(
+                   fc_shortcuts::sc()->get_shortcut(SC_RALLY_POINTS))));
+  connect(act, &QAction::triggered, this, &mr_menu::slot_city_rally_points);
 
   /* Select Menu */
   menu = this->addMenu(_("Select"));
@@ -3069,6 +3075,14 @@ void mr_menu::slot_city_production()
 void mr_menu::slot_city_traderoutes()
 {
   key_city_trade_routes_toggle();
+}
+
+/**********************************************************************//**
+  Action "SHOW CITY RALLY POINTS"
+**************************************************************************/
+void mr_menu::slot_city_rally_points()
+{
+  key_city_rally_points_toggle();
 }
 
 /**********************************************************************//**

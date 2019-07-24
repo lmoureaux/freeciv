@@ -52,7 +52,7 @@ enum {
   RESPONSE_SAVE
 };
 
-static int num_shortcuts = 57;
+static int num_shortcuts = 58;
 fc_shortcut default_shortcuts[] = {
   {SC_SCROLL_MAP, 0, Qt::RightButton, Qt::NoModifier, "Scroll map" },
   {SC_CENTER_VIEW, Qt::Key_C, Qt::AllButtons, Qt::NoModifier,
@@ -165,7 +165,9 @@ fc_shortcut default_shortcuts[] = {
   {SC_GOBUILDCITY, Qt::Key_B, Qt::AllButtons, Qt::ShiftModifier,
     _("Go And Build City") },
   {SC_GOJOINCITY, Qt::Key_J, Qt::AllButtons, Qt::ShiftModifier,
-    _("Go And Join City") }
+    _("Go And Join City") },
+  {SC_RALLY_POINTS, Qt::Key_R, Qt::AllButtons, Qt::ControlModifier,
+    _("City Rally Points") },
 };
 
 

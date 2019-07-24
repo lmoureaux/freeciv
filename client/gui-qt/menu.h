@@ -364,6 +364,7 @@ private slots:
   void slot_city_production();
   void slot_city_buycost();
   void slot_city_traderoutes();
+  void slot_city_rally_points();
   void slot_city_names();
   void zoom_in();
   void zoom_scale_fonts();
