@@ -2322,6 +2322,19 @@ void request_toggle_city_trade_routes(void)
 }
 
 /**********************************************************************//**
+  Toggle display of city rally points
+**************************************************************************/
+void request_toggle_city_rally_points(void)
+{
+  if (!can_client_change_view()) {
+    return;
+  }
+
+  gui_options.draw_city_rally_points ^= 1;
+  update_map_canvas_visible();
+}
+
+/**********************************************************************//**
   Toggle display of terrain
 **************************************************************************/
 void request_toggle_terrain(void)
@@ -3568,6 +3581,14 @@ void key_city_productions_toggle(void)
 void key_city_trade_routes_toggle(void)
 {
   request_toggle_city_trade_routes();
+}
+
+/**********************************************************************//**
+  Handle client request to toggle drawing of rally point information.
+**************************************************************************/
+void key_city_rally_points_toggle(void)
+{
+  request_toggle_city_rally_points();
 }
 
 /**********************************************************************//**
