@@ -5937,6 +5937,10 @@ int fill_sprite_array(struct tileset *t,
     /* Nothing.  This is just a placeholder. */
     break;
 
+  case LAYER_RALLY_POINT:
+    /* TODO */
+    break;
+
   case LAYER_GOTO:
     if (ptile && goto_is_active()) {
       sprs += fill_goto_sprite_array(t, sprs, ptile, pedge, pcorner);
@@ -6841,6 +6845,7 @@ bool tileset_layer_in_category(enum mapview_layer layer,
     return cat == LAYER_CATEGORY_CITY || cat == LAYER_CATEGORY_TILE;
   case LAYER_CITY1:
   case LAYER_CITY2:
+  case LAYER_RALLY_POINT:
     return cat == LAYER_CATEGORY_CITY;
   case LAYER_UNIT:
   case LAYER_FOCUS_UNIT:

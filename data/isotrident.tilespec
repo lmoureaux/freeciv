@@ -122,6 +122,7 @@ tilelabel_offset_y = 10
 ;  "TileLabel",  ; Tile labels ("Scorched spot").
 ;  "CityBar",    ; The city bar with name, production, food, ...
 ;  "FocusUnit",  ; The focused unit(s).
+;  "RallyPoint", ; Rally point turn count, intermediate points and lines.
 ;  "Goto",       ; Goto turn count and intermediate points, *not* goto lines.
 ;  "WorkerTask", ; The unit task indicators ("G", "S", ...).
 ;  "Editor"      ; Editor stuff (selected tile and start points).
