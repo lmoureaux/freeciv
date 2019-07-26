@@ -168,6 +168,8 @@ struct drawn_sprite {
 #define SPECENUM_VALUE22NAME "WorkerTask"
 #define SPECENUM_VALUE23 LAYER_EDITOR
 #define SPECENUM_VALUE23NAME "Editor"
+#define SPECENUM_VALUE24 LAYER_TRADE_ROUTES
+#define SPECENUM_VALUE24NAME "TradeRoutes"
 #define SPECENUM_COUNT LAYER_COUNT
 #include "specenum_gen.h"
 

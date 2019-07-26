@@ -1727,6 +1727,10 @@ void update_map_canvas(int canvas_x, int canvas_y, int width, int height)
       show_city_descriptions(canvas_x, canvas_y, width, height);
       continue;
     }
+    if (layer == LAYER_TRADE_ROUTES) {
+      draw_trade_routes();
+      continue;
+    }
     gui_rect_iterate_coord(gui_x0, gui_y0, width,
 			   height + (tileset_is_isometric(tileset)
 				     ? (tileset_tile_height(tileset) / 2 * map_zoom) : 0),
@@ -1747,7 +1751,6 @@ void update_map_canvas(int canvas_x, int canvas_y, int width, int height)
     } gui_rect_iterate_coord_end;
   } mapview_layer_iterate_end;
 
-  draw_trade_routes();
   link_marks_draw_all();
 
   /* Draw the goto lines on top of the whole thing. This is done last as
