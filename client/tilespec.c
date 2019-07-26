@@ -5935,6 +5935,7 @@ int fill_sprite_array(struct tileset *t,
   case LAYER_CITYBAR:
   case LAYER_TILELABEL:
   case LAYER_TRADE_ROUTES:
+  case LAYER_LINK_MARKS:
     /* Nothing.  This is just a placeholder. */
     break;
 
@@ -6861,6 +6862,7 @@ bool tileset_layer_in_category(enum mapview_layer layer,
   case LAYER_WORKERTASK:
   case LAYER_EDITOR:
   case LAYER_TRADE_ROUTES:
+  case LAYER_LINK_MARKS:
     return FALSE;
   case LAYER_COUNT:
     break; /* and fail below */

@@ -126,7 +126,8 @@ tilelabel_offset_y = 10
 ;  "Goto",       ; Goto turn count and intermediate points, *not* goto lines.
 ;  "WorkerTask", ; The unit task indicators ("G", "S", ...).
 ;  "Editor",     ; Editor stuff (selected tile and start points).
-;  "TradeRoutes" ; Trade routes.
+;  "TradeRoutes",; Trade routes.
+;  "LinkMarks"   ; Markers for unit and tile links sent in the chat.
 
 ; This is special because it gets freed and reloaded as required:
 main_intro_file    = "misc/intro"
