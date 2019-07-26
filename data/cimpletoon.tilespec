@@ -129,7 +129,8 @@ unit_default_orientation = "s"
 ;  "WorkerTask", ; The unit task indicators ("G", "S", ...).
 ;  "Editor",     ; Editor stuff (selected tile and start points).
 ;  "TradeRoutes",; Trade routes.
-;  "LinkMarks"   ; Markers for unit and tile links sent in the chat.
+;  "LinkMarks",  ; Markers for unit and tile links sent in the chat.
+;  "GotoLines"   ; Goto lines, *not* intermediate points.
 
 ; This is special because it gets freed and reloaded as required:
 main_intro_file    = "misc/intro"

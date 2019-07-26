@@ -172,6 +172,8 @@ struct drawn_sprite {
 #define SPECENUM_VALUE24NAME "TradeRoutes"
 #define SPECENUM_VALUE25 LAYER_LINK_MARKS
 #define SPECENUM_VALUE25NAME "LinkMarks"
+#define SPECENUM_VALUE26 LAYER_GOTO_LINES
+#define SPECENUM_VALUE26NAME "GotoLines"
 #define SPECENUM_COUNT LAYER_COUNT
 #include "specenum_gen.h"
 

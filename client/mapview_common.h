@@ -249,7 +249,8 @@ void unqueue_mapview_updates(bool write_to_screen);
 
 void map_to_gui_vector(const struct tileset *t, float zoom,
 		       float *gui_dx, float *gui_dy, int map_dx, int map_dy);
-bool tile_to_canvas_pos(float *canvas_x, float *canvas_y, struct tile *ptile);
+bool tile_to_canvas_pos(float *canvas_x, float *canvas_y,
+                        const struct tile *ptile);
 struct tile *canvas_pos_to_tile(float canvas_x, float canvas_y);
 struct tile *canvas_pos_to_nearest_tile(float canvas_x, float canvas_y);
 
@@ -311,7 +312,7 @@ void show_tile_labels(int canvas_base_x, int canvas_base_y,
                       int width_base, int height_base);
 bool show_unit_orders(struct unit *punit);
 
-void draw_segment(struct tile *ptile, enum direction8 dir);
+void draw_segment(const struct tile *ptile, enum direction8 dir);
 void undraw_segment(struct tile *ptile, enum direction8 dir);
 
 void decrease_unit_hp_smooth(struct unit *punit0, int hp0, 

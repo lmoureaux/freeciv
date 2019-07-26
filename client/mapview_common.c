@@ -662,7 +662,8 @@ static void gui_to_map_pos(const struct tileset *t,
   parts of the code assume tileset_tile_width(tileset) and tileset_tile_height(tileset)
   to be even numbers.
 ****************************************************************************/
-bool tile_to_canvas_pos(float *canvas_x, float *canvas_y, struct tile *ptile)
+bool tile_to_canvas_pos(float *canvas_x, float *canvas_y,
+                        const struct tile *ptile)
 {
   int center_map_x, center_map_y, dx, dy, tile_x, tile_y;
 
@@ -1755,25 +1756,6 @@ void update_map_canvas(int canvas_x, int canvas_y, int width, int height)
     } gui_rect_iterate_coord_end;
   } mapview_layer_iterate_end;
 
-  /* Draw the goto lines on top of the whole thing. This is done last as
-   * we want it completely on top.
-   *
-   * Note that a pixel right on the border of a tile may actually contain a
-   * goto line from an adjacent tile.  Thus we draw any extra goto lines
-   * from adjacent tiles (if they're close enough). */
-  gui_rect_iterate(gui_x0 - GOTO_WIDTH, gui_y0 - GOTO_WIDTH,
-		   width + 2 * GOTO_WIDTH, height + 2 * GOTO_WIDTH,
-		   ptile, pedge, pcorner, map_zoom) {
-    if (!ptile) {
-      continue;
-    }
-    adjc_dir_base_iterate(&(wld.map), ptile, dir) {
-      if (mapdeco_is_gotoline_set(ptile, dir)) {
-        draw_segment(ptile, dir);
-      }
-    } adjc_dir_base_iterate_end;
-  } gui_rect_iterate_end;
-
   if (!full) {
     /* Swap store and tmp_store back. */
     tmp = mapview.store;
@@ -2461,7 +2443,7 @@ bool show_unit_orders(struct unit *punit)
   Draw a goto line at the given location and direction.  The line goes from
   the source tile to the adjacent tile in the given direction.
 ****************************************************************************/
-void draw_segment(struct tile *src_tile, enum direction8 dir)
+void draw_segment(const struct tile *src_tile, enum direction8 dir)
 {
   float canvas_x, canvas_y, canvas_dx, canvas_dy;
 

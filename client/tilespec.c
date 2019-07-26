@@ -6014,6 +6014,16 @@ int fill_sprite_array(struct tileset *t,
     }
     break;
 
+  case LAYER_GOTO_LINES:
+    if (ptile) {
+      adjc_dir_base_iterate(&(wld.map), ptile, goto_dir) {
+        if (mapdeco_is_gotoline_set(ptile, goto_dir)) {
+          draw_segment(ptile, goto_dir);
+        }
+      } adjc_dir_base_iterate_end;
+    }
+    break;
+
   case LAYER_COUNT:
     fc_assert(FALSE);
     break;
@@ -6863,6 +6873,7 @@ bool tileset_layer_in_category(enum mapview_layer layer,
   case LAYER_EDITOR:
   case LAYER_TRADE_ROUTES:
   case LAYER_LINK_MARKS:
+  case LAYER_GOTO_LINES:
     return FALSE;
   case LAYER_COUNT:
     break; /* and fail below */
