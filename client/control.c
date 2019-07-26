@@ -432,6 +432,8 @@ static void current_focus_append(struct unit *punit)
 {
   unit_list_append(current_focus, punit);
 
+  mapdeco_set_gotoroute(punit);
+
   punit->client.focus_status = FOCUS_AVAIL;
   refresh_unit_mapcanvas(punit, unit_tile(punit), TRUE, FALSE);
 
@@ -454,6 +456,8 @@ static void current_focus_remove(struct unit *punit)
   if (action_selection_actor_unit() == punit->id) {
     action_selection_close();
   }
+
+  mapdeco_remove_gotoroute(punit);
 
   unit_list_remove(current_focus, punit);
   refresh_unit_mapcanvas(punit, unit_tile(punit), TRUE, FALSE);
@@ -515,8 +519,9 @@ void unit_focus_set(struct unit *punit)
   } unit_list_iterate_end;
 
   /* Redraw the old focus unit (to fix blinking or remove the selection
-   * circle). */
+   * circle). Also remove goto routes. */
   unit_list_iterate(current_focus, punit_old) {
+    mapdeco_remove_gotoroute(punit_old);
     refresh_unit_mapcanvas(punit_old, unit_tile(punit_old), TRUE, FALSE);
   } unit_list_iterate_end;
   unit_list_clear(current_focus);

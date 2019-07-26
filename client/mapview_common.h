@@ -51,6 +51,7 @@ void mapdeco_set_crosshair(const struct tile *ptile, bool crosshair);
 bool mapdeco_is_crosshair_set(const struct tile *ptile);
 void mapdeco_clear_crosshairs(void);
 void mapdeco_set_gotoroute(const struct unit *punit);
+void mapdeco_remove_gotoroute(const struct unit *punit);
 void mapdeco_add_gotoline(const struct tile *ptile,
                           enum direction8 dir);
 void mapdeco_remove_gotoline(const struct tile *ptile,

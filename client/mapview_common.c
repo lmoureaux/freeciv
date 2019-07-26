@@ -3486,6 +3486,41 @@ void mapdeco_set_gotoroute(const struct unit *punit)
 }
 
 /************************************************************************//**
+  Removes the map decorations for the given unit's goto route, see
+  mapdeco_set_gotoroute.
+****************************************************************************/
+void mapdeco_remove_gotoroute(const struct unit *punit)
+{
+  const struct unit_order *porder;
+  const struct tile *ptile;
+  int i, ind;
+
+  if (!punit || !unit_tile(punit) || !unit_has_orders(punit)
+      || punit->orders.length < 1) {
+    return;
+  }
+
+  ptile = unit_tile(punit);
+
+  for (i = 0; ptile != NULL && i < punit->orders.length; i++) {
+    if (punit->orders.index + i >= punit->orders.length
+        && !punit->orders.repeat) {
+      break;
+    }
+
+    ind = (punit->orders.index + i) % punit->orders.length;
+    porder = &punit->orders.list[ind];
+    if (porder->order != ORDER_MOVE) {
+      /* FIXME: should display some indication of non-move orders here. */
+      continue;
+    }
+
+    mapdeco_remove_gotoline(ptile, porder->dir);
+    ptile = mapstep(&(wld.map), ptile, porder->dir);
+  }
+}
+
+/************************************************************************//**
   Returns TRUE if a goto line should be drawn from the given tile in the
   given direction.
 ****************************************************************************/
