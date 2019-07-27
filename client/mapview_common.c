@@ -3386,9 +3386,19 @@ void mapdeco_add_gotoline(const struct tile *ptile, enum direction8 dir)
     return;
   }
 
+  /* Source tile */
   if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc)) {
     pglc = gotoline_counter_new();
     gotoline_hash_insert(mapdeco_gotoline_table, ptile, pglc);
+  }
+  changed = (pglc->line_count[dir] < 1);
+  pglc->line_count[dir]++;
+
+  /* Destination tile */
+  dir = opposite_direction(dir);
+  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile_dest, &pglc)) {
+    pglc = gotoline_counter_new();
+    gotoline_hash_insert(mapdeco_gotoline_table, ptile_dest, pglc);
   }
   changed = (pglc->line_count[dir] < 1);
   pglc->line_count[dir]++;
@@ -3409,13 +3419,13 @@ void mapdeco_remove_gotoline(const struct tile *ptile,
                              enum direction8 dir)
 {
   struct gotoline_counter *pglc;
-  bool changed = FALSE;
 
   if (!mapdeco_gotoline_table || !ptile
       || !(0 <= dir && dir <= direction8_max())) {
     return;
   }
 
+  /* Source tile */
   if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc)) {
     return;
   }
@@ -3423,16 +3433,26 @@ void mapdeco_remove_gotoline(const struct tile *ptile,
   pglc->line_count[dir]--;
   if (pglc->line_count[dir] <= 0) {
     pglc->line_count[dir] = 0;
-    changed = TRUE;
+    /* FIXME: Remove cast. */
+    refresh_tile_mapcanvas((struct tile *) ptile, FALSE, FALSE);
   }
 
-  if (changed) {
-    /* FIXME: Remove the casts. */
+  /* Destination tile */
+  ptile = mapstep(&(wld.map), ptile, dir);
+  if (!ptile) {
+    return;
+  }
+
+  dir = opposite_direction(dir);
+  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc)) {
+    return;
+  }
+
+  pglc->line_count[dir]--;
+  if (pglc->line_count[dir] <= 0) {
+    pglc->line_count[dir] = 0;
+    /* FIXME: Remove cast. */
     refresh_tile_mapcanvas((struct tile *) ptile, FALSE, FALSE);
-    ptile = mapstep(&(wld.map), ptile, dir);
-    if (ptile != NULL) {
-      refresh_tile_mapcanvas((struct tile *) ptile, FALSE, FALSE);
-    }
   }
 }
 

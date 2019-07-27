@@ -133,6 +133,15 @@
 #define SPECENUM_COUNT ESTYLE_COUNT
 #include "specenum_gen.h"
 
+/* Style of the goto lines */
+#define SPECENUM_NAME gotoline_style
+#define SPECENUM_VALUE0 GSTYLE_LINES
+#define SPECENUM_VALUE0NAME "Lines"
+#define SPECENUM_VALUE1 GSTYLE_ALL_SEPARATE
+#define SPECENUM_VALUE1NAME "AllSeparate"
+#define SPECENUM_COUNT GSTYLE_COUNT
+#include "specenum_gen.h"
+
 /* This could be moved to common/map.h if there's more use for it. */
 enum direction4 {
   DIR4_NORTH = 0, DIR4_SOUTH, DIR4_EAST, DIR4_WEST
@@ -361,6 +370,9 @@ struct named_sprites {
     } u;
   } extras[MAX_EXTRA_TYPES];
   struct {
+    struct sprite *dir[DIR8_MAGIC_MAX];
+  } go_to; /* goto is a C keyword */
+  struct {
     struct sprite
       *main[EDGE_COUNT],
       *city[EDGE_COUNT],
@@ -485,9 +497,12 @@ struct tileset {
   enum fog_style fogstyle;
   enum darkness_style darkness_style;
 
+  enum gotoline_style gotoline_style;
+
   int unit_flag_offset_x, unit_flag_offset_y;
   int city_flag_offset_x, city_flag_offset_y;
   int unit_offset_x, unit_offset_y;
+  int goto_offset_x, goto_offset_y;
   int city_offset_x, city_offset_y;
   int city_size_offset_x, city_size_offset_y;
 
@@ -564,6 +579,8 @@ static void tileset_setup_base(struct tileset *t,
 static void tileset_setup_road(struct tileset *t,
                                struct extra_type *pextra,
                                const char *tag);
+
+static void tileset_setup_goto(struct tileset *t);
 
 static bool is_extra_drawing_enabled(struct extra_type *pextra);
 
@@ -2029,6 +2046,29 @@ static struct tileset *tileset_read_toplevel(const char *tileset_name,
     goto ON_ERROR;
   }
 
+  /* Goto line style */
+  tstr = secfile_lookup_str(file, "tilespec.gotoline_style");
+  if (tstr == NULL) {
+    t->gotoline_style = GSTYLE_LINES;
+  } else {
+    t->gotoline_style = gotoline_style_by_name(tstr, fc_strcasecmp);
+    if (!gotoline_style_is_valid(t->gotoline_style)) {
+      log_error("Tileset \"%s\": unknown gotoline_style \"%s\"",
+                t->name, tstr);
+      goto ON_ERROR;
+    }
+  }
+
+  /* Goto line styles other than GSYLE_LINES require offsets. */
+  if (t->gotoline_style != GSTYLE_LINES
+      && (!secfile_lookup_int(file, &t->goto_offset_x,
+                              "tilespec.goto_offset_x")
+        || !secfile_lookup_int(file, &t->goto_offset_y,
+                               "tilespec.goto_offset_y"))) {
+    log_error("Tileset \"%s\" invalid: %s", t->name, secfile_error());
+    goto ON_ERROR;
+  }
+
   if (!secfile_lookup_int(file, &t->unit_flag_offset_x,
                           "tilespec.unit_flag_offset_x")
       || !secfile_lookup_int(file, &t->unit_flag_offset_y,
@@ -3152,6 +3192,9 @@ static void tileset_lookup_sprite_tags(struct tileset *t)
   }
 #undef SET_GOTO_TURN_SPRITE
 
+  /* Setup base goto sprites. */
+  tileset_setup_goto(tileset);
+
   /* Must have at least one upkeep sprite per output type (and unhappy) */
   /* The rest are optional; we copy the previous sprite for unspecified ones */
   fc_strlcpy(buffer, "upkeep.unhappy", sizeof(buffer));
@@ -3799,6 +3842,35 @@ static void tileset_setup_road(struct tileset *t,
         SET_SPRITE_OPT(extras[id].u.road.corner[dir], full_tag_name);
       }
     }
+  }
+}
+
+/************************************************************************//**
+  Set goto sprite values; should only happen after tilespec_load_tiles().
+****************************************************************************/
+static void tileset_setup_goto(struct tileset *t)
+{
+  char full_tag_name[MAX_LEN_NAME];
+  const char *dir_name;
+  enum direction8 dir;
+  int i;
+
+  switch (t->gotoline_style) {
+  case GSTYLE_LINES:
+    /* No sprites needed*/
+    return;
+
+  case GSTYLE_ALL_SEPARATE:
+    for (i = 0; i < t->num_valid_tileset_dirs; i++) {
+      dir = t->valid_tileset_dirs[i];
+      dir_name = dir_get_tileset_name(dir);
+      fc_snprintf(full_tag_name, sizeof(full_tag_name), "goto.%s", dir_name);
+      SET_SPRITE(go_to.dir[dir], full_tag_name);
+    }
+    break;
+
+  case GSTYLE_COUNT:
+    fc_assert_ret(FALSE);
   }
 }
 
@@ -6018,7 +6090,19 @@ int fill_sprite_array(struct tileset *t,
     if (ptile) {
       adjc_dir_base_iterate(&(wld.map), ptile, goto_dir) {
         if (mapdeco_is_gotoline_set(ptile, goto_dir)) {
-          draw_segment(ptile, goto_dir);
+          switch (t->gotoline_style) {
+          case GSTYLE_LINES:
+            draw_segment(ptile, goto_dir);
+            break;
+
+          case GSTYLE_ALL_SEPARATE:
+            ADD_SPRITE(t->sprites.go_to.dir[goto_dir], FALSE,
+                       t->goto_offset_x, t->goto_offset_y);
+            break;
+
+          case GSTYLE_COUNT:
+            fc_assert_ret_val(FALSE, sprs - save_sprs);
+          }
         }
       } adjc_dir_base_iterate_end;
     }
