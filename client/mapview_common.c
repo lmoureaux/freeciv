@@ -53,19 +53,27 @@ struct tile_hash *mapdeco_highlight_table;
 struct tile_hash *mapdeco_crosshair_table;
 
 struct gotoline_counter {
-  int line_count[DIR8_MAGIC_MAX];
+  enum direction8 from, to;
+  int count;
 };
 
-static inline struct gotoline_counter *gotoline_counter_new(void);
-static void gotoline_counter_destroy(struct gotoline_counter *pglc);
+#define SPECVEC_TAG glc
+#define SPECVEC_TYPE struct gotoline_counter
+#include "specvec.h"
+#define glc_vector_iterate(vec, pglc)                                       \
+  TYPED_VECTOR_ITERATE(struct gotoline_counter, vec, pglc)
+#define glc_vector_iterate_end VECTOR_ITERATE_END
+
+static inline struct glc_vector *glc_vector_new(void);
+static void glc_vector_destroy(struct glc_vector *pglc);
 
 #define SPECHASH_TAG gotoline
 #define SPECHASH_IKEY_TYPE struct tile *
-#define SPECHASH_IDATA_TYPE struct gotoline_counter *
-#define SPECHASH_IDATA_FREE gotoline_counter_destroy
+#define SPECHASH_IDATA_TYPE struct glc_vector *
+#define SPECHASH_IDATA_FREE glc_vector_destroy
 #include "spechash.h"
-#define gotoline_hash_iterate(hash, ptile, pglc)                            \
-  TYPED_HASH_ITERATE(struct tile *, struct gotoline_counter *,              \
+#define gotoline_hash_iterate(hash, ptile, pglc)                          \
+  TYPED_HASH_ITERATE(struct tile *, struct glc_vector *,                    \
                      hash, ptile, pglc)
 #define gotoline_hash_iterate_end HASH_ITERATE_END
 
@@ -437,21 +445,29 @@ void update_animation(void)
 }
 
 /************************************************************************//**
+  Create a new goto line counter vector.
+****************************************************************************/
+struct glc_vector *glc_vector_new(void)
+{
+  return fc_calloc(1, sizeof(struct glc_vector));
+}
+
+/************************************************************************//**
+  Frees a goto line counter vector.
+****************************************************************************/
+void glc_vector_destroy(struct glc_vector *pglc)
+{
+  glc_vector_free(pglc);
+  free(pglc);
+}
+
+/************************************************************************//**
   Create a new goto line counter.
 ****************************************************************************/
 static inline struct gotoline_counter *gotoline_counter_new(void)
 {
   struct gotoline_counter *pglc = fc_calloc(1, sizeof(*pglc));
   return pglc;
-}
-
-/************************************************************************//**
-  Create a new goto line counter.
-****************************************************************************/
-static void gotoline_counter_destroy(struct gotoline_counter *pglc)
-{
-  fc_assert_ret(NULL != pglc);
-  free(pglc);
 }
 
 /************************************************************************//**
@@ -3375,7 +3391,9 @@ void mapdeco_add_gotoline(const struct tile *ptile,
                           enum direction8 from,
                           enum direction8 to)
 {
-  struct gotoline_counter *pglc;
+  struct glc_vector *pglc_vec;
+  struct gotoline_counter counter;
+  bool found = FALSE;
   bool changed = FALSE;
 
   if (!mapdeco_gotoline_table || !ptile) {
@@ -3385,22 +3403,29 @@ void mapdeco_add_gotoline(const struct tile *ptile,
     return;
   }
 
-  /* Retrieve counter */
-  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc)) {
-    pglc = gotoline_counter_new();
-    gotoline_hash_insert(mapdeco_gotoline_table, ptile, pglc);
+  /* Retrieve counter vector */
+  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc_vec)) {
+    pglc_vec = glc_vector_new();
+    gotoline_hash_insert(mapdeco_gotoline_table, ptile, pglc_vec);
   }
 
-  /* "From" line */
-  if (is_valid_dir(from)) {
-    changed |= (pglc->line_count[from] < 1);
-    pglc->line_count[from]++;
-  }
+  /* Retrieve entry for (from, to) if it exists */
+  glc_vector_iterate(pglc_vec, pglc) {
+    if (pglc->from == from && pglc->to == to) {
+      changed = (pglc->count < 1);
+      pglc->count++;
+      found = true;
+      break;
+    }
+  } glc_vector_iterate_end
 
-  /* "To" line */
-  if (is_valid_dir(to)) {
-    changed |= (pglc->line_count[to] < 1);
-    pglc->line_count[to]++;
+  /* Insert an entry if there was none */
+  if (!found) {
+    changed = TRUE;
+    counter.from = from;
+    counter.to = to;
+    counter.count = 1;
+    glc_vector_append(pglc_vec, counter);
   }
 
   /* Redraw */
@@ -3419,7 +3444,9 @@ void mapdeco_remove_gotoline(const struct tile *ptile,
                              enum direction8 from,
                              enum direction8 to)
 {
+  struct glc_vector *pglc_vec;
   struct gotoline_counter *pglc;
+  int i;
   bool changed = FALSE;
 
   if (!mapdeco_gotoline_table || !ptile) {
@@ -3429,21 +3456,28 @@ void mapdeco_remove_gotoline(const struct tile *ptile,
     return;
   }
 
-  /* Retrieve counter */
-  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc)) {
+  /* Retrieve counter vector */
+  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc_vec)) {
     return;
   }
 
-  /* "From" line */
-  if (is_valid_dir(from)) {
-    pglc->line_count[from] = MAX(0, pglc->line_count[from] - 1);
-    changed |= (pglc->line_count[from] < 1);
+  /* Retrieve entry for (from, to) if it exists */
+  for (i = 0; i < glc_vector_size(pglc_vec); i++) {
+    pglc = &pglc_vec->p[i];
+    if (pglc->from == from && pglc->to == to) {
+      pglc->count--;
+      changed = (pglc->count < 1);
+      break;
+    }
   }
 
-  /* "To" line */
-  if (is_valid_dir(to)) {
-    pglc->line_count[to] = MAX(0, pglc->line_count[to] - 1);
-    changed |= (pglc->line_count[to] < 1);
+  /* Remove empty element if needed */
+  if (changed) {
+    glc_vector_remove(pglc_vec, i);
+    /* Also clear the hash */
+    if (0 == glc_vector_size(pglc_vec)) {
+      gotoline_hash_remove(mapdeco_gotoline_table, ptile);
+    }
   }
 
   /* Redraw */
@@ -3538,18 +3572,26 @@ void mapdeco_remove_gotoroute(const struct unit *punit)
 bool mapdeco_is_gotoline_set(const struct tile *ptile,
                              enum direction8 dir)
 {
-  struct gotoline_counter *pglc;
+  struct glc_vector *pglc_vec;
 
   if (!ptile || !(0 <= dir && dir <= direction8_max())
       || !mapdeco_gotoline_table) {
     return FALSE;
   }
 
-  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc)) {
+  /* Retrieve counter vector */
+  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc_vec)) {
     return FALSE;
   }
 
-  return pglc->line_count[dir] > 0;
+  /* Retrieve entry for the requested direction if it exists */
+  glc_vector_iterate(pglc_vec, pglc) {
+    if ((pglc->from == dir || pglc->to == dir) && pglc->count > 0) {
+      return TRUE;
+    }
+  } glc_vector_iterate_end
+
+  return FALSE;
 }
 
 /************************************************************************//**
@@ -3562,13 +3604,10 @@ void mapdeco_clear_gotoroutes(void)
     return;
   }
 
-  gotoline_hash_iterate(mapdeco_gotoline_table, ptile, pglc) {
-    refresh_tile_mapcanvas(ptile, FALSE, FALSE);
-    adjc_dir_iterate(&(wld.map), ptile, ptile_dest, dir) {
-      if (pglc->line_count[dir] > 0) {
-        refresh_tile_mapcanvas(ptile_dest, FALSE, FALSE);
-      }
-    } adjc_dir_iterate_end;
+  gotoline_hash_iterate(mapdeco_gotoline_table, ptile, pglc_vec) {
+    if (0 != glc_vector_size(pglc_vec)) {
+      refresh_tile_mapcanvas(ptile, FALSE, FALSE);
+    }
   } gotoline_hash_iterate_end;
   gotoline_hash_clear(mapdeco_gotoline_table);
 }
