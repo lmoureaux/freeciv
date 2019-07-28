@@ -53,9 +53,11 @@ void mapdeco_clear_crosshairs(void);
 void mapdeco_set_gotoroute(const struct unit *punit);
 void mapdeco_remove_gotoroute(const struct unit *punit);
 void mapdeco_add_gotoline(const struct tile *ptile,
-                          enum direction8 dir);
+                          enum direction8 from,
+                          enum direction8 to);
 void mapdeco_remove_gotoline(const struct tile *ptile,
-                             enum direction8 dir);
+                             enum direction8 from,
+                             enum direction8 to);
 bool mapdeco_is_gotoline_set(const struct tile *ptile,
                              enum direction8 dir);
 void mapdeco_clear_gotoroutes(void);

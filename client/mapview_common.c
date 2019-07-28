@@ -3371,42 +3371,42 @@ void mapdeco_clear_crosshairs(void)
   there was no previously drawn line there, a mapview update is queued
   for the source and destination tiles.
 ****************************************************************************/
-void mapdeco_add_gotoline(const struct tile *ptile, enum direction8 dir)
+void mapdeco_add_gotoline(const struct tile *ptile,
+                          enum direction8 from,
+                          enum direction8 to)
 {
   struct gotoline_counter *pglc;
-  const struct tile *ptile_dest;
-  bool changed;
+  bool changed = FALSE;
 
-  if (!mapdeco_gotoline_table || !ptile
-      || !(0 <= dir && dir <= direction8_max())) {
+  if (!mapdeco_gotoline_table || !ptile) {
     return;
   }
-  ptile_dest = mapstep(&(wld.map), ptile, dir);
-  if (!ptile_dest) {
+  if (!is_valid_dir(from) && !is_valid_dir(to)) {
     return;
   }
 
-  /* Source tile */
+  /* Retrieve counter */
   if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc)) {
     pglc = gotoline_counter_new();
     gotoline_hash_insert(mapdeco_gotoline_table, ptile, pglc);
   }
-  changed = (pglc->line_count[dir] < 1);
-  pglc->line_count[dir]++;
 
-  /* Destination tile */
-  dir = opposite_direction(dir);
-  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile_dest, &pglc)) {
-    pglc = gotoline_counter_new();
-    gotoline_hash_insert(mapdeco_gotoline_table, ptile_dest, pglc);
+  /* "From" line */
+  if (is_valid_dir(from)) {
+    changed |= (pglc->line_count[from] < 1);
+    pglc->line_count[from]++;
   }
-  changed = (pglc->line_count[dir] < 1);
-  pglc->line_count[dir]++;
 
+  /* "To" line */
+  if (is_valid_dir(to)) {
+    changed |= (pglc->line_count[to] < 1);
+    pglc->line_count[to]++;
+  }
+
+  /* Redraw */
   if (changed) {
     /* FIXME: Remove cast. */
     refresh_tile_mapcanvas((struct tile *) ptile, FALSE, FALSE);
-    refresh_tile_mapcanvas((struct tile *) ptile_dest, FALSE, FALSE);
   }
 }
 
@@ -3416,41 +3416,38 @@ void mapdeco_add_gotoline(const struct tile *ptile, enum direction8 dir)
   erase the drawn line.
 ****************************************************************************/
 void mapdeco_remove_gotoline(const struct tile *ptile,
-                             enum direction8 dir)
+                             enum direction8 from,
+                             enum direction8 to)
 {
   struct gotoline_counter *pglc;
+  bool changed = FALSE;
 
-  if (!mapdeco_gotoline_table || !ptile
-      || !(0 <= dir && dir <= direction8_max())) {
+  if (!mapdeco_gotoline_table || !ptile) {
+    return;
+  }
+  if (!is_valid_dir(from) && !is_valid_dir(to)) {
     return;
   }
 
-  /* Source tile */
+  /* Retrieve counter */
   if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc)) {
     return;
   }
 
-  pglc->line_count[dir]--;
-  if (pglc->line_count[dir] <= 0) {
-    pglc->line_count[dir] = 0;
-    /* FIXME: Remove cast. */
-    refresh_tile_mapcanvas((struct tile *) ptile, FALSE, FALSE);
+  /* "From" line */
+  if (is_valid_dir(from)) {
+    pglc->line_count[from] = MAX(0, pglc->line_count[from] - 1);
+    changed |= (pglc->line_count[from] < 1);
   }
 
-  /* Destination tile */
-  ptile = mapstep(&(wld.map), ptile, dir);
-  if (!ptile) {
-    return;
+  /* "To" line */
+  if (is_valid_dir(to)) {
+    pglc->line_count[to] = MAX(0, pglc->line_count[to] - 1);
+    changed |= (pglc->line_count[to] < 1);
   }
 
-  dir = opposite_direction(dir);
-  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc)) {
-    return;
-  }
-
-  pglc->line_count[dir]--;
-  if (pglc->line_count[dir] <= 0) {
-    pglc->line_count[dir] = 0;
+  /* Redraw */
+  if (changed) {
     /* FIXME: Remove cast. */
     refresh_tile_mapcanvas((struct tile *) ptile, FALSE, FALSE);
   }
@@ -3465,6 +3462,7 @@ void mapdeco_set_gotoroute(const struct unit *punit)
 {
   const struct unit_order *porder;
   const struct tile *ptile;
+  enum direction8 next_dir = DIR8_ORIGIN;
   int i, ind;
 
   if (!punit || !unit_tile(punit) || !unit_has_orders(punit)
@@ -3475,20 +3473,26 @@ void mapdeco_set_gotoroute(const struct unit *punit)
   ptile = unit_tile(punit);
 
   for (i = 0; ptile != NULL && i < punit->orders.length; i++) {
-    if (punit->orders.index + i >= punit->orders.length
+    if (punit->orders.index + i > punit->orders.length
         && !punit->orders.repeat) {
       break;
     }
 
     ind = (punit->orders.index + i) % punit->orders.length;
     porder = &punit->orders.list[ind];
-    if (porder->order != ORDER_MOVE) {
+    if (porder->order != ORDER_MOVE && porder->order != ORDER_ACTION_MOVE) {
       /* FIXME: should display some indication of non-move orders here. */
       continue;
     }
 
-    mapdeco_add_gotoline(ptile, porder->dir);
+    mapdeco_add_gotoline(ptile, next_dir, porder->dir);
     ptile = mapstep(&(wld.map), ptile, porder->dir);
+    next_dir = opposite_direction(porder->dir);
+  }
+
+  /* Draw the last part of the path */
+  if (ptile && next_dir != DIR8_ORIGIN) {
+    mapdeco_add_gotoline(ptile, next_dir, DIR8_ORIGIN);
   }
 }
 

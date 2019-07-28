@@ -197,6 +197,7 @@ static void goto_path_redraw(const struct pf_path *new_path,
                              const struct pf_path *old_path)
 {
   int start_index = 0;
+  enum direction8 from, to;
   int i;
 
   fc_assert_ret(new_path != NULL);
@@ -204,7 +205,7 @@ static void goto_path_redraw(const struct pf_path *new_path,
   if (old_path != NULL) {
     /* We had a path drawn already. Determine how much of it we can reuse
      * in drawing the new path. */
-    for (i = 0; i < new_path->length - 1 && i < old_path->length - 1; i++) {
+    for (i = 0; i < new_path->length && i < old_path->length; i++) {
       struct pf_position *old_pos = old_path->positions + i;
       struct pf_position *new_pos = new_path->positions + i;
 
@@ -216,25 +217,35 @@ static void goto_path_redraw(const struct pf_path *new_path,
     start_index = i;
 
     /* Erase everything we cannot reuse. */
-    for (; i < old_path->length - 1; i++) {
+    for (; i < old_path->length; i++) {
       struct pf_position *pos = old_path->positions + i;
 
+      from = to = DIR8_ORIGIN;
       if (is_valid_dir(pos->dir_to_next_pos)) {
-        mapdeco_remove_gotoline(pos->tile, pos->dir_to_next_pos);
-      } else {
-        fc_assert(pos->tile == (pos + 1)->tile);
+        to = pos->dir_to_next_pos;
+      }
+      if (is_valid_dir(pos->dir_to_here)) {
+        from = opposite_direction(pos->dir_to_here);
+      }
+      if (is_valid_dir(from) || is_valid_dir(to)) {
+        mapdeco_remove_gotoline(pos->tile, from, to);
       }
     }
   }
 
   /* Draw the new path. */
-  for (i = start_index; i < new_path->length - 1; i++) {
+  for (i = start_index; i < new_path->length; i++) {
     struct pf_position *pos = new_path->positions + i;
 
+    from = to = DIR8_ORIGIN;
     if (is_valid_dir(pos->dir_to_next_pos)) {
-      mapdeco_add_gotoline(pos->tile, pos->dir_to_next_pos);
-    } else {
-      fc_assert(pos->tile == (pos + 1)->tile);
+        to = pos->dir_to_next_pos;
+    }
+    if (is_valid_dir(pos->dir_to_here)) {
+        from = opposite_direction(pos->dir_to_here);
+    }
+    if (is_valid_dir(from) || is_valid_dir(to)) {
+      mapdeco_add_gotoline(pos->tile, from, to);
     }
   }
 }
@@ -244,17 +255,23 @@ static void goto_path_redraw(const struct pf_path *new_path,
 ****************************************************************************/
 static void goto_path_undraw(const struct pf_path *path)
 {
+  enum direction8 from, to;
   int i;
 
   fc_assert_ret(path != NULL);
 
-  for (i = 0; i < path->length - 1; i++) {
+  for (i = 0; i < path->length; i++) {
     struct pf_position *pos = path->positions + i;
 
+    from = to = DIR8_ORIGIN;
     if (is_valid_dir(pos->dir_to_next_pos)) {
-      mapdeco_remove_gotoline(pos->tile, pos->dir_to_next_pos);
-    } else {
-      fc_assert(pos->tile == (pos + 1)->tile);
+        to = pos->dir_to_next_pos;
+    }
+    if (is_valid_dir(pos->dir_to_here)) {
+        from = opposite_direction(pos->dir_to_here);
+    }
+    if (is_valid_dir(from) || is_valid_dir(to)) {
+      mapdeco_remove_gotoline(pos->tile, from, to);
     }
   }
 }
