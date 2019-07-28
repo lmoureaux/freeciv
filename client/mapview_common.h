@@ -58,8 +58,10 @@ void mapdeco_add_gotoline(const struct tile *ptile,
 void mapdeco_remove_gotoline(const struct tile *ptile,
                              enum direction8 from,
                              enum direction8 to);
-bool mapdeco_is_gotoline_set(const struct tile *ptile,
-                             enum direction8 dir);
+bool mapdeco_is_incoming_gotoline_set(const struct tile *ptile,
+                                      enum direction8 dir);
+bool mapdeco_is_outgoing_gotoline_set(const struct tile *ptile,
+                                      enum direction8 dir);
 void mapdeco_clear_gotoroutes(void);
 
 

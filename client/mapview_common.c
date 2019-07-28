@@ -3538,6 +3538,7 @@ void mapdeco_remove_gotoroute(const struct unit *punit)
 {
   const struct unit_order *porder;
   const struct tile *ptile;
+  enum direction8 next_dir = DIR8_ORIGIN;
   int i, ind;
 
   if (!punit || !unit_tile(punit) || !unit_has_orders(punit)
@@ -3555,22 +3556,28 @@ void mapdeco_remove_gotoroute(const struct unit *punit)
 
     ind = (punit->orders.index + i) % punit->orders.length;
     porder = &punit->orders.list[ind];
-    if (porder->order != ORDER_MOVE) {
+    if (porder->order != ORDER_MOVE && porder->order != ORDER_ACTION_MOVE) {
       /* FIXME: should display some indication of non-move orders here. */
       continue;
     }
 
-    mapdeco_remove_gotoline(ptile, porder->dir);
+    mapdeco_remove_gotoline(ptile, next_dir, porder->dir);
     ptile = mapstep(&(wld.map), ptile, porder->dir);
+    next_dir = opposite_direction(porder->dir);
+  }
+
+  /* Remove the last part of the path */
+  if (ptile && next_dir != DIR8_ORIGIN) {
+    mapdeco_remove_gotoline(ptile, next_dir, DIR8_ORIGIN);
   }
 }
 
 /************************************************************************//**
-  Returns TRUE if a goto line should be drawn from the given tile in the
-  given direction.
+  Returns TRUE if a goto line should be drawn coming from the given direction
+  to the given tile.
 ****************************************************************************/
-bool mapdeco_is_gotoline_set(const struct tile *ptile,
-                             enum direction8 dir)
+bool mapdeco_is_incoming_gotoline_set(const struct tile *ptile,
+                                      enum direction8 dir)
 {
   struct glc_vector *pglc_vec;
 
@@ -3586,7 +3593,36 @@ bool mapdeco_is_gotoline_set(const struct tile *ptile,
 
   /* Retrieve entry for the requested direction if it exists */
   glc_vector_iterate(pglc_vec, pglc) {
-    if ((pglc->from == dir || pglc->to == dir) && pglc->count > 0) {
+    if (pglc->from == dir && pglc->count > 0) {
+      return TRUE;
+    }
+  } glc_vector_iterate_end
+
+  return FALSE;
+}
+
+/************************************************************************//**
+  Returns TRUE if a goto line should be drawn going from the given tile in
+  the given direction.
+****************************************************************************/
+bool mapdeco_is_outgoing_gotoline_set(const struct tile *ptile,
+                                      enum direction8 dir)
+{
+  struct glc_vector *pglc_vec;
+
+  if (!ptile || !(0 <= dir && dir <= direction8_max())
+      || !mapdeco_gotoline_table) {
+    return FALSE;
+  }
+
+  /* Retrieve counter vector */
+  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc_vec)) {
+    return FALSE;
+  }
+
+  /* Retrieve entry for the requested direction if it exists */
+  glc_vector_iterate(pglc_vec, pglc) {
+    if (pglc->to == dir && pglc->count > 0) {
       return TRUE;
     }
   } glc_vector_iterate_end
