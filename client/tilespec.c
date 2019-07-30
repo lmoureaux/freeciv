@@ -141,6 +141,10 @@
 #define SPECENUM_VALUE1NAME "AllSeparate"
 #define SPECENUM_VALUE2 GSTYLE_ALL_SEPARATE_DIRECTIONAL
 #define SPECENUM_VALUE2NAME "AllSeparateDirectional"
+#define SPECENUM_VALUE3 GSTYLE_TWO_COMBINED
+#define SPECENUM_VALUE3NAME "TwoCombined"
+#define SPECENUM_VALUE4 GSTYLE_TWO_COMBINED_DIRECTIONAL
+#define SPECENUM_VALUE4NAME "TwoCombinedDirectional"
 #define SPECENUM_COUNT GSTYLE_COUNT
 #include "specenum_gen.h"
 
@@ -371,9 +375,12 @@ struct named_sprites {
       } road;
     } u;
   } extras[MAX_EXTRA_TYPES];
-  struct {
-    struct sprite *in[DIR8_MAGIC_MAX];
-    struct sprite *out[DIR8_MAGIC_MAX];
+  union {
+    struct {
+      struct sprite *in[DIR8_MAGIC_MAX];
+      struct sprite *out[DIR8_MAGIC_MAX];
+    } all_separate;
+    struct sprite *two_combined[DIR8_MAGIC_MAX+1][DIR8_MAGIC_MAX+1];
   } go_to; /* goto is a C keyword */
   struct {
     struct sprite
@@ -3854,9 +3861,9 @@ static void tileset_setup_road(struct tileset *t,
 static void tileset_setup_goto(struct tileset *t)
 {
   char full_tag_name[MAX_LEN_NAME];
-  const char *dir_name;
-  enum direction8 dir;
-  int i;
+  const char *dir_name, *dir2_name;
+  enum direction8 dir, dir2;
+  int i, j;
 
   switch (t->gotoline_style) {
   case GSTYLE_LINES:
@@ -3868,9 +3875,10 @@ static void tileset_setup_goto(struct tileset *t)
       dir = t->valid_tileset_dirs[i];
       dir_name = dir_get_tileset_name(dir);
       fc_snprintf(full_tag_name, sizeof(full_tag_name), "goto.%s", dir_name);
-      SET_SPRITE(go_to.in[dir], full_tag_name);
+      SET_SPRITE(go_to.all_separate.in[dir], full_tag_name);
       /* Unified treatement with GSTYLE_ALL_SEPARATE_DIRECTIONAL */
-      t->sprites.go_to.out[dir] = t->sprites.go_to.in[dir];
+      t->sprites.go_to.all_separate.out[dir] =
+        t->sprites.go_to.all_separate.in[dir];
     }
     break;
 
@@ -3881,12 +3889,66 @@ static void tileset_setup_goto(struct tileset *t)
 
       fc_snprintf(full_tag_name, sizeof(full_tag_name),
                   "goto.in_%s", dir_name);
-      SET_SPRITE(go_to.in[dir], full_tag_name);
+      SET_SPRITE(go_to.all_separate.in[dir], full_tag_name);
 
       fc_snprintf(full_tag_name, sizeof(full_tag_name),
                   "goto.out_%s", dir_name);
-      SET_SPRITE(go_to.out[dir], full_tag_name);
+      SET_SPRITE(go_to.all_separate.out[dir], full_tag_name);
     }
+    break;
+
+  case GSTYLE_TWO_COMBINED:
+    for (i = 0; i < t->num_valid_tileset_dirs; i++) {
+      dir = t->valid_tileset_dirs[i];
+      dir_name = dir_get_tileset_name(dir);
+
+      for (j = i; j < t->num_valid_tileset_dirs; j++) {
+        dir2 = t->valid_tileset_dirs[j];
+        dir2_name = dir_get_tileset_name(dir2);
+
+        fc_snprintf(full_tag_name, sizeof(full_tag_name),
+                    "goto.%s_%s", dir_name, dir2_name);
+        SET_SPRITE(go_to.two_combined[dir][dir2], full_tag_name);
+        /* Unified treatment with GSTYLE_TWO_COMBINED_DIRECTIONAL */
+        t->sprites.go_to.two_combined[dir2][dir] =
+          t->sprites.go_to.two_combined[dir][dir2];
+      }
+
+      fc_snprintf(full_tag_name, sizeof(full_tag_name),
+                  "goto.%s_none", dir_name);
+      SET_SPRITE(go_to.two_combined[dir][DIR8_ORIGIN], full_tag_name);
+      /* Unified treatment with GSTYLE_TWO_COMBINED_DIRECTIONAL */
+      t->sprites.go_to.two_combined[DIR8_ORIGIN][dir] =
+        t->sprites.go_to.two_combined[dir][DIR8_ORIGIN];
+    }
+    SET_SPRITE(go_to.two_combined[DIR8_ORIGIN][DIR8_ORIGIN],
+               "goto.none_none");
+    break;
+
+  case GSTYLE_TWO_COMBINED_DIRECTIONAL:
+    for (i = 0; i < t->num_valid_tileset_dirs; i++) {
+      dir = t->valid_tileset_dirs[i];
+      dir_name = dir_get_tileset_name(dir);
+
+      for (j = 0; j < t->num_valid_tileset_dirs; j++) {
+        dir2 = t->valid_tileset_dirs[j];
+        dir2_name = dir_get_tileset_name(dir2);
+
+        fc_snprintf(full_tag_name, sizeof(full_tag_name),
+                    "goto.%s_%s", dir_name, dir2_name);
+        SET_SPRITE(go_to.two_combined[dir][dir2], full_tag_name);
+      }
+
+      fc_snprintf(full_tag_name, sizeof(full_tag_name),
+                  "goto.none_%s", dir_name);
+      SET_SPRITE(go_to.two_combined[DIR8_ORIGIN][dir], full_tag_name);
+
+      fc_snprintf(full_tag_name, sizeof(full_tag_name),
+                  "goto.%s_none", dir_name);
+      SET_SPRITE(go_to.two_combined[dir][DIR8_ORIGIN], full_tag_name);
+    }
+    SET_SPRITE(go_to.two_combined[DIR8_ORIGIN][DIR8_ORIGIN],
+               "goto.none_none");
     break;
 
   case GSTYLE_COUNT:
@@ -6126,13 +6188,19 @@ int fill_sprite_array(struct tileset *t,
         case GSTYLE_ALL_SEPARATE:
         case GSTYLE_ALL_SEPARATE_DIRECTIONAL:
           if (incoming != DIR8_ORIGIN && is_valid_tileset_dir(t, incoming)) {
-            ADD_SPRITE(t->sprites.go_to.in[incoming], FALSE,
+            ADD_SPRITE(t->sprites.go_to.all_separate.in[incoming], FALSE,
                        t->goto_offset_x, t->goto_offset_y);
           }
           if (outgoing != DIR8_ORIGIN && is_valid_tileset_dir(t, outgoing)) {
-            ADD_SPRITE(t->sprites.go_to.out[outgoing], FALSE,
+            ADD_SPRITE(t->sprites.go_to.all_separate.out[outgoing], FALSE,
                        t->goto_offset_x, t->goto_offset_y);
           }
+          break;
+
+        case GSTYLE_TWO_COMBINED:
+        case GSTYLE_TWO_COMBINED_DIRECTIONAL:
+          ADD_SPRITE(t->sprites.go_to.two_combined[incoming][outgoing],
+                     FALSE, t->goto_offset_x, t->goto_offset_y);
           break;
 
         case GSTYLE_COUNT:
