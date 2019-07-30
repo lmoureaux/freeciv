@@ -193,7 +193,8 @@ bool is_valid_goto_destination(const struct tile *ptile)
 /************************************************************************//**
   Show goto lines.
 ****************************************************************************/
-static void goto_path_redraw(const struct pf_path *new_path,
+static void goto_path_redraw(const struct unit *punit,
+                             const struct pf_path *new_path,
                              const struct pf_path *old_path)
 {
   int start_index = 0;
@@ -228,7 +229,7 @@ static void goto_path_redraw(const struct pf_path *new_path,
         from = opposite_direction(pos->dir_to_here);
       }
       if (is_valid_dir(from) || is_valid_dir(to)) {
-        mapdeco_remove_gotoline(pos->tile, from, to);
+        mapdeco_remove_gotoline(pos->tile, punit->utype, from, to);
       }
     }
   }
@@ -245,7 +246,7 @@ static void goto_path_redraw(const struct pf_path *new_path,
         from = opposite_direction(pos->dir_to_here);
     }
     if (is_valid_dir(from) || is_valid_dir(to)) {
-      mapdeco_add_gotoline(pos->tile, from, to);
+      mapdeco_add_gotoline(pos->tile, punit->utype, from, to);
     }
   }
 }
@@ -253,7 +254,8 @@ static void goto_path_redraw(const struct pf_path *new_path,
 /************************************************************************//**
   Remove goto lines.
 ****************************************************************************/
-static void goto_path_undraw(const struct pf_path *path)
+static void goto_path_undraw(const struct unit *punit,
+                             const struct pf_path *path)
 {
   enum direction8 from, to;
   int i;
@@ -271,7 +273,7 @@ static void goto_path_undraw(const struct pf_path *path)
         from = opposite_direction(pos->dir_to_here);
     }
     if (is_valid_dir(from) || is_valid_dir(to)) {
-      mapdeco_remove_gotoline(pos->tile, from, to);
+      mapdeco_remove_gotoline(pos->tile, punit->utype, from, to);
     }
   }
 }
@@ -310,13 +312,13 @@ static bool update_last_part(struct goto_map *goto_map,
       }
 
       if (old_path != NULL) {
-        goto_path_undraw(old_path);
+        goto_path_undraw(goto_map->focus, old_path);
         pf_path_destroy(old_path);
         p->path = NULL;
       }
       if (hover_state == HOVER_PATROL
           && goto_map->patrol.return_path != NULL) {
-        goto_path_undraw(goto_map->patrol.return_path);
+        goto_path_undraw(goto_map->focus, goto_map->patrol.return_path);
         pf_path_destroy(goto_map->patrol.return_path);
         goto_map->patrol.return_path = NULL;
       }
@@ -358,13 +360,13 @@ static bool update_last_part(struct goto_map *goto_map,
         }
 
         if (old_path != NULL) {
-          goto_path_undraw(old_path);
+          goto_path_undraw(goto_map->focus, old_path);
           pf_path_destroy(old_path);
         }
         pf_path_destroy(new_path);
         p->path = NULL;
         if (goto_map->patrol.return_path != NULL) {
-          goto_path_undraw(goto_map->patrol.return_path);
+          goto_path_undraw(goto_map->focus, goto_map->patrol.return_path);
           pf_path_destroy(goto_map->patrol.return_path);
           goto_map->patrol.return_path = NULL;
         }
@@ -387,14 +389,14 @@ static bool update_last_part(struct goto_map *goto_map,
       /* We cannot re-use old path because:
        * 1- the start tile isn't the same.
        * 2- the turn number neither (impossible to do in backward mode). */
-      goto_path_undraw(goto_map->patrol.return_path);
+      goto_path_undraw(goto_map->focus, goto_map->patrol.return_path);
       pf_path_destroy(goto_map->patrol.return_path);
     }
-    goto_path_redraw(return_path, NULL);
+    goto_path_redraw(goto_map->focus, return_path, NULL);
     goto_map->patrol.return_path = return_path;
   }
 
-  goto_path_redraw(new_path, old_path);
+  goto_path_redraw(goto_map->focus, new_path, old_path);
   pf_path_destroy(old_path);
 
   log_goto_path("To (%d,%d) part %d: total_MC: %d",

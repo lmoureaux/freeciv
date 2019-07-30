@@ -54,6 +54,7 @@ struct tile_hash *mapdeco_crosshair_table;
 
 struct gotoline_counter {
   enum direction8 from, to;
+  Unit_type_id unit_type;
   int count;
 };
 
@@ -3388,6 +3389,7 @@ void mapdeco_clear_crosshairs(void)
   for the source and destination tiles.
 ****************************************************************************/
 void mapdeco_add_gotoline(const struct tile *ptile,
+                          const struct unit_type *putype,
                           enum direction8 from,
                           enum direction8 to)
 {
@@ -3395,6 +3397,8 @@ void mapdeco_add_gotoline(const struct tile *ptile,
   struct gotoline_counter counter;
   bool found = FALSE;
   bool changed = FALSE;
+
+  fc_assert_ret(putype);
 
   if (!mapdeco_gotoline_table || !ptile) {
     return;
@@ -3411,7 +3415,8 @@ void mapdeco_add_gotoline(const struct tile *ptile,
 
   /* Retrieve entry for (from, to) if it exists */
   glc_vector_iterate(pglc_vec, pglc) {
-    if (pglc->from == from && pglc->to == to) {
+    if (pglc->from == from && pglc->to == to
+        && pglc->unit_type == putype->item_number) {
       changed = (pglc->count < 1);
       pglc->count++;
       found = true;
@@ -3424,6 +3429,7 @@ void mapdeco_add_gotoline(const struct tile *ptile,
     changed = TRUE;
     counter.from = from;
     counter.to = to;
+    counter.unit_type = putype->item_number;
     counter.count = 1;
     glc_vector_append(pglc_vec, counter);
   }
@@ -3441,6 +3447,7 @@ void mapdeco_add_gotoline(const struct tile *ptile,
   erase the drawn line.
 ****************************************************************************/
 void mapdeco_remove_gotoline(const struct tile *ptile,
+                             const struct unit_type *putype,
                              enum direction8 from,
                              enum direction8 to)
 {
@@ -3448,6 +3455,8 @@ void mapdeco_remove_gotoline(const struct tile *ptile,
   struct gotoline_counter *pglc;
   int i;
   bool changed = FALSE;
+
+  fc_assert_ret(putype);
 
   if (!mapdeco_gotoline_table || !ptile) {
     return;
@@ -3464,7 +3473,8 @@ void mapdeco_remove_gotoline(const struct tile *ptile,
   /* Retrieve entry for (from, to) if it exists */
   for (i = 0; i < glc_vector_size(pglc_vec); i++) {
     pglc = &pglc_vec->p[i];
-    if (pglc->from == from && pglc->to == to) {
+    if (pglc->from == from && pglc->to == to
+        && pglc->unit_type == putype->item_number) {
       pglc->count--;
       changed = (pglc->count < 1);
       break;
@@ -3519,14 +3529,14 @@ void mapdeco_set_gotoroute(const struct unit *punit)
       continue;
     }
 
-    mapdeco_add_gotoline(ptile, next_dir, porder->dir);
+    mapdeco_add_gotoline(ptile, punit->utype, next_dir, porder->dir);
     ptile = mapstep(&(wld.map), ptile, porder->dir);
     next_dir = opposite_direction(porder->dir);
   }
 
   /* Draw the last part of the path */
   if (ptile && next_dir != DIR8_ORIGIN) {
-    mapdeco_add_gotoline(ptile, next_dir, DIR8_ORIGIN);
+    mapdeco_add_gotoline(ptile, punit->utype, next_dir, DIR8_ORIGIN);
   }
 }
 
