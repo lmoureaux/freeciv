@@ -3573,16 +3573,16 @@ void mapdeco_remove_gotoroute(const struct unit *punit)
 }
 
 /************************************************************************//**
-  Returns TRUE if a goto line should be drawn coming from the given direction
-  to the given tile.
+  Retrieves directions of the incoming and outgoing goto lines at the given
+  index. Returns true on success.
 ****************************************************************************/
-bool mapdeco_is_incoming_gotoline_set(const struct tile *ptile,
-                                      enum direction8 dir)
+bool mapdeco_get_gotolines(const struct tile *ptile, int index,
+                           enum direction8 *incoming,
+                           enum direction8 *outgoing)
 {
   struct glc_vector *pglc_vec;
 
-  if (!ptile || !(0 <= dir && dir <= direction8_max())
-      || !mapdeco_gotoline_table) {
+  if (!ptile || !mapdeco_gotoline_table) {
     return FALSE;
   }
 
@@ -3592,42 +3592,14 @@ bool mapdeco_is_incoming_gotoline_set(const struct tile *ptile,
   }
 
   /* Retrieve entry for the requested direction if it exists */
-  glc_vector_iterate(pglc_vec, pglc) {
-    if (pglc->from == dir && pglc->count > 0) {
-      return TRUE;
-    }
-  } glc_vector_iterate_end
-
-  return FALSE;
-}
-
-/************************************************************************//**
-  Returns TRUE if a goto line should be drawn going from the given tile in
-  the given direction.
-****************************************************************************/
-bool mapdeco_is_outgoing_gotoline_set(const struct tile *ptile,
-                                      enum direction8 dir)
-{
-  struct glc_vector *pglc_vec;
-
-  if (!ptile || !(0 <= dir && dir <= direction8_max())
-      || !mapdeco_gotoline_table) {
+  if (index >= glc_vector_size(pglc_vec)) {
     return FALSE;
   }
 
-  /* Retrieve counter vector */
-  if (!gotoline_hash_lookup(mapdeco_gotoline_table, ptile, &pglc_vec)) {
-    return FALSE;
-  }
+  *incoming = pglc_vec->p[index].from;
+  *outgoing = pglc_vec->p[index].to;
 
-  /* Retrieve entry for the requested direction if it exists */
-  glc_vector_iterate(pglc_vec, pglc) {
-    if (pglc->to == dir && pglc->count > 0) {
-      return TRUE;
-    }
-  } glc_vector_iterate_end
-
-  return FALSE;
+  return TRUE;
 }
 
 /************************************************************************//**

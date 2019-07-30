@@ -6108,23 +6108,29 @@ int fill_sprite_array(struct tileset *t,
 
   case LAYER_GOTO_LINES:
     if (ptile) {
-      adjc_dir_base_iterate(&(wld.map), ptile, goto_dir) {
+      enum direction8 incoming, outgoing;
+      int i;
+      for (i = 0;
+           mapdeco_get_gotolines(ptile, i, &incoming, &outgoing);
+           i++) {
         switch (t->gotoline_style) {
         case GSTYLE_LINES:
-          if (mapdeco_is_outgoing_gotoline_set(ptile, goto_dir)
-              || mapdeco_is_incoming_gotoline_set(ptile, goto_dir)) {
-            draw_segment(ptile, goto_dir);
+          if (incoming != DIR8_ORIGIN && is_valid_tileset_dir(t, incoming)) {
+            draw_segment(ptile, incoming);
+          }
+          if (outgoing != DIR8_ORIGIN && is_valid_tileset_dir(t, outgoing)) {
+            draw_segment(ptile, outgoing);
           }
           break;
 
         case GSTYLE_ALL_SEPARATE:
         case GSTYLE_ALL_SEPARATE_DIRECTIONAL:
-          if (mapdeco_is_incoming_gotoline_set(ptile, goto_dir)) {
-            ADD_SPRITE(t->sprites.go_to.in[goto_dir], FALSE,
+          if (incoming != DIR8_ORIGIN && is_valid_tileset_dir(t, incoming)) {
+            ADD_SPRITE(t->sprites.go_to.in[incoming], FALSE,
                        t->goto_offset_x, t->goto_offset_y);
           }
-          if (mapdeco_is_outgoing_gotoline_set(ptile, goto_dir)) {
-            ADD_SPRITE(t->sprites.go_to.out[goto_dir], FALSE,
+          if (outgoing != DIR8_ORIGIN && is_valid_tileset_dir(t, outgoing)) {
+            ADD_SPRITE(t->sprites.go_to.out[outgoing], FALSE,
                        t->goto_offset_x, t->goto_offset_y);
           }
           break;
@@ -6132,7 +6138,7 @@ int fill_sprite_array(struct tileset *t,
         case GSTYLE_COUNT:
           fc_assert_ret_val(FALSE, sprs - save_sprs);
         }
-      } adjc_dir_base_iterate_end;
+      }
     }
     break;
 
