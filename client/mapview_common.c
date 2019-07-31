@@ -3587,6 +3587,7 @@ void mapdeco_remove_gotoroute(const struct unit *punit)
   index. Returns true on success.
 ****************************************************************************/
 bool mapdeco_get_gotolines(const struct tile *ptile, int index,
+                           Unit_type_id *utype,
                            enum direction8 *incoming,
                            enum direction8 *outgoing)
 {
@@ -3606,6 +3607,7 @@ bool mapdeco_get_gotolines(const struct tile *ptile, int index,
     return FALSE;
   }
 
+  *utype = pglc_vec->p[index].unit_type;
   *incoming = pglc_vec->p[index].from;
   *outgoing = pglc_vec->p[index].to;
 

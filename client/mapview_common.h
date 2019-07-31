@@ -61,6 +61,7 @@ void mapdeco_remove_gotoline(const struct tile *ptile,
                              enum direction8 from,
                              enum direction8 to);
 bool mapdeco_get_gotolines(const struct tile *ptile, int index,
+                           Unit_type_id *utype,
                            enum direction8 *incoming,
                            enum direction8 *outgoing);
 void mapdeco_clear_gotoroutes(void);
