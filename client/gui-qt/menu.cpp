@@ -512,6 +512,14 @@ void real_menus_init(void)
 **************************************************************************/
 void real_menus_update(void)
 {
+  if (game.client.ruleset_ready == false) {
+    return;
+  }
+  // Menus may not be initialized if the ruleset was not ready at the time
+  // real_menus_init() was called. Do it now if needed.
+  if (!gui()->menu_bar->initialized()) {
+    real_menus_init();
+  }
   if (C_S_RUNNING <= client_state()) {
     gui()->menuBar()->setVisible(true);
     if (is_waiting_turn_change() == false) {

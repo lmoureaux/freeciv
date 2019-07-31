@@ -258,21 +258,22 @@ public slots:
 class mr_menu : public QMenuBar
 {
   Q_OBJECT
-  QMenu *airlift_menu;
-  QMenu *bases_menu;
-  QMenu *menu;
-  QMenu *multiplayer_menu;
-  QMenu *roads_menu;
-  QActionGroup *airlift_type;
-  QActionGroup *action_vs_city;
-  QActionGroup *action_vs_unit;
-  QMenu *action_unit_menu;
-  QMenu *action_city_menu;
+  QMenu *airlift_menu = nullptr;
+  QMenu *bases_menu = nullptr;
+  QMenu *menu = nullptr;
+  QMenu *multiplayer_menu = nullptr;
+  QMenu *roads_menu = nullptr;
+  QActionGroup *airlift_type = nullptr;
+  QActionGroup *action_vs_city = nullptr;
+  QActionGroup *action_vs_unit = nullptr;
+  QMenu *action_unit_menu = nullptr;
+  QMenu *action_city_menu = nullptr;
   QHash<munit, QAction*> menu_list;
   qfc_units_list units_list;
 public:
   mr_menu();
   void setup_menus();
+  bool initialized() const { return multiplayer_menu != nullptr; }
   void menus_sensitive();
   void update_airlift_menu();
   void update_roads_menu();
