@@ -35,7 +35,25 @@ fog_style      = "Darkness"
 
 ; Was darkness style "CardinalFull" (15 sprites)
 darkness_style = "Corner"
- 
+
+; Style of the goto lines. One of:
+; - "Lines" (default): Solid lines drawn using the mapview_goto color.
+; - "AllSeparate": Sprites goto.n, goto.ne, goto.e etc are used.
+; - "AllSeparateDirectional": Like AllSeparate, but use different sprites for
+;   incoming and outgoing paths: goto.in_n, goto.out_n, goto.in_ne etc.
+; - "TwoCombined": Sprites are selected depending on two directions (incoming
+;   and outgoing). The order of the directions doesn't matter. Sprites are
+;   named goto.n_n, goto.n_ne etc.
+; - "TwoCombinedDirectional": Like TwoCombined, but the order matters, ie
+;   goto.n_s is for a path going from North to South.
+; All values other than "Lines" require "goto_offset_x" and "goto_offset_y"
+; to be set.
+gotoline_style = "TwoCombinedDirectional"
+
+; offset the goto line sprites by this amount
+goto_offset_x = -1
+goto_offset_y = -1
+
 ; offset the flags by this amount when drawing units
 unit_flag_offset_x = 0
 unit_flag_offset_y = 0
@@ -45,7 +63,7 @@ city_flag_offset_y = 0
 ; offset the city occupied sprite by this amount
 occupied_offset_x = 0
 occupied_offset_y = 0
- 
+
 ; offset the units by this amount
 unit_offset_x = 0
 unit_offset_y = 0
@@ -141,6 +159,8 @@ main_intro_file    = "misc/intro"
 files =
   "misc/overlays.spec",
   "misc/citybar.spec",
+  "trident/goto-twocombined.spec",
+  "trident/goto-twocombined-wheels.spec",
   "trident/tiles.spec",
   "trident/earth.spec",
   "misc/small.spec",
