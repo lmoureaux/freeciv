@@ -234,6 +234,7 @@ void map_view::shortcut_pressed(int key)
   /* Rally point - select city - skip */
   if (bt == sc->mouse && md == sc->mod
       && gui()->rallies.hover_city == true) {
+
     char text[1024];
     ptile = canvas_pos_to_tile(pos.x(), pos.y());
     if (tile_city(ptile)) {
@@ -244,6 +245,8 @@ void map_view::shortcut_pressed(int key)
                   _("Selected city %s. Now choose rally point."),
                   city_link(tile_city(ptile)));
       output_window_append(ftc_client, text);
+
+      enter_rally_state(pcity);
     } else {
       output_window_append(ftc_client, _("No city selected. Aborted"));
     }
@@ -268,6 +271,8 @@ void map_view::shortcut_pressed(int key)
                   city_link(pcity));
       output_window_append(ftc_client, text);
     }
+
+    exit_rally_state();
 
     gui()->rallies.rally_city = NULL;
     gui()->rallies.hover_tile = false;

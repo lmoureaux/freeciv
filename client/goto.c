@@ -102,6 +102,14 @@ static void fill_parameter_part(struct pf_parameter *param,
 ****************************************************************************/
 static struct tile *goto_destination = NULL;
 
+/****************************************************************************
+  Various stuff for the rally points.
+****************************************************************************/
+static struct {
+  struct city *city;
+  struct unit_list *ulist;
+} rally_point;
+
 /************************************************************************//**
   Create a new goto map.
 ****************************************************************************/
@@ -142,7 +150,8 @@ static struct unit *goto_map_unit(const struct goto_map *goto_map)
 
   fc_assert(punit != NULL);
   fc_assert(unit_is_in_focus(punit));
-  fc_assert(punit == player_unit_by_number(client_player(), punit->id));
+  fc_assert(unit_is_virtual(punit)
+            || punit == player_unit_by_number(client_player(), punit->id));
   return punit;
 }
 
@@ -1019,6 +1028,60 @@ void exit_goto_state(void)
 }
 
 /************************************************************************//**
+  Enter the rally point state: create a fake unit and activate goto.
+****************************************************************************/
+void enter_rally_state(struct city *pcity)
+{
+  struct unit_type *putype;
+  struct unit *punit;
+
+  fc_assert_ret(pcity != NULL);
+
+  /* Create a virtual unit of the type being produced by the city. */
+  if (pcity->production.kind != VUT_UTYPE) {
+    return;
+  }
+  putype = pcity->production.value.utype;
+  punit = unit_virtual_create(
+    client_player(), pcity, putype,
+    city_production_unit_veteran_level(pcity, putype));
+
+  /* Setup the rally point state. */
+  if (rally_point.ulist) {
+    exit_rally_state();
+  }
+  rally_point.city = pcity;
+  rally_point.ulist = unit_list_new();
+  unit_list_append(rally_point.ulist, punit);
+
+  /* Enter goto state for the virtual unit. */
+  unit_focus_set(punit);
+  set_hover_state(rally_point.ulist, HOVER_GOTO, ACTIVITY_LAST, NULL,
+                  -1, ACTION_NONE, ORDER_LAST);
+  enter_goto_state(rally_point.ulist);
+}
+
+/************************************************************************//**
+  Tidy up and deactivate rally point state.
+****************************************************************************/
+void exit_rally_state(void)
+{
+  if (rally_point.city == NULL) {
+    return;
+  }
+
+  /* Exit goto state and restore the previously focused unit. */
+  exit_goto_state();
+  clear_hover_state();
+  key_recall_previous_focus_unit();
+
+  /* Clean up. */
+  unit_list_destroy(rally_point.ulist);
+  rally_point.city = NULL;
+  rally_point.ulist = NULL;
+}
+
+/************************************************************************//**
   Called from control_unit_killed() in client/control.c
 ****************************************************************************/
 void goto_unit_killed(struct unit *punit)
@@ -1037,6 +1100,45 @@ void goto_unit_killed(struct unit *punit)
       break;
     }
   } goto_map_unit_iterate_end;
+}
+
+/************************************************************************//**
+  Called when a city changes. Updates the rally point parameters if
+  necessary.
+****************************************************************************/
+void rally_update_city(struct city *pcity)
+{
+  struct unit_type *putype;
+  struct unit *punit;
+  int veteran;
+
+  fc_assert_ret(pcity != NULL);
+
+  if (!can_player_see_city_internals(client_player(), pcity)) {
+    /* City lost? In any case we can't set its rally point. */
+    exit_rally_state();
+    return;
+  }
+
+  if (pcity == rally_point.city) {
+    /* Find the unit type being produced by the city. */
+    if (pcity->production.kind != VUT_UTYPE) {
+      return;
+    }
+    putype = pcity->production.value.utype;
+    veteran = city_production_unit_veteran_level(pcity, putype);
+
+    /* Fetch the current rally virtual unit. */
+    punit = unit_list_front(rally_point.ulist);
+    fc_assert_ret(punit != NULL);
+
+    if (punit->utype != putype || punit->veteran != veteran) {
+      /* The unit type has changed, hard-reset our state. This has the side
+       * effect of clearing all waypoints. */
+      exit_rally_state();
+      enter_rally_state(pcity);
+    }
+  }
 }
 
 /************************************************************************//**

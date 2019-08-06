@@ -1001,6 +1001,7 @@ static void city_packet_common(struct city *pcity, struct tile *pcenter,
               city_name_get(pcity));
   }
 
+  rally_update_city(pcity);
   editgui_notify_object_changed(OBJTYPE_CITY, pcity->id, FALSE);
 }
 

@@ -2573,6 +2573,7 @@ void mr_menu::slot_orders_clear()
 **************************************************************************/
 void mr_menu::slot_rally()
 {
+  unit_focus_set(nullptr);
   gui()->rallies.hover_tile = false;
   gui()->rallies.hover_city = true;
 }

@@ -57,6 +57,7 @@
 #include "climap.h"
 #include "climisc.h"
 #include "control.h"
+#include "goto.h"
 #include "mapctrl_common.h"
 #include "mapview_common.h"
 #include "messagewin_common.h"
@@ -153,6 +154,7 @@ void client_remove_city(struct city *pcity)
   }
 
   popdown_city_dialog(pcity);
+  rally_update_city(pcity);
   game_remove_city(&wld, pcity);
   city_report_dialog_update();
   refresh_city_mapcanvas(&old_city, ptile, TRUE, FALSE);
