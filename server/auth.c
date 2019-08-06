@@ -124,11 +124,17 @@ bool auth_user(struct connection *pconn, char *username)
       }
     } else if (exists) {
       /* we found a user */
-      fc_snprintf(buffer, sizeof(buffer), _("Enter password for %s:"),
-                  pconn->username);
-      dsend_packet_authentication_req(pconn, AUTH_LOGIN_FIRST, buffer);
-      pconn->server.auth_settime = time(NULL);
-      pconn->server.status = AS_REQUESTING_OLD_PASS;
+      if (srvarg.auth_use_token) {
+//         dsend_packet_authentication_req(pconn, AUTH_LOGIN_TOKEN, token_url_for_user());
+        pconn->server.auth_settime = time(NULL);
+        pconn->server.status = AS_REQUESTING_TOKEN;
+      } else {
+        fc_snprintf(buffer, sizeof(buffer), _("Enter password for %s:"),
+                    pconn->username);
+        dsend_packet_authentication_req(pconn, AUTH_LOGIN_FIRST, buffer);
+        pconn->server.auth_settime = time(NULL);
+        pconn->server.status = AS_REQUESTING_OLD_PASS;
+      }
     } else {
       /* we couldn't find the user, he is new */
       if (srvarg.auth_allow_newusers) {
@@ -245,8 +251,10 @@ void auth_process_status(struct connection *pconn)
     }
     break;
   case AS_ESTABLISHED:
+  case AS_REQUESTING_TOKEN:
     /* this better fail bigtime */
     fc_assert(pconn->server.status != AS_ESTABLISHED);
+    fc_assert(pconn->server.status != AS_REQUESTING_TOKEN);
     break;
   }
 }

@@ -55,6 +55,7 @@ struct server_arguments {
   bool fcdb_enabled;            /* defaults to FALSE */
   char *fcdb_conf;              /* freeciv database configuration file */
   bool auth_enabled;            /* defaults to FALSE */
+  bool auth_use_token;          /* defaults to FALSE */
   bool auth_allow_guests;       /* defaults to FALSE */
   bool auth_allow_newusers;     /* defaults to FALSE */
   enum announce_type announce;
