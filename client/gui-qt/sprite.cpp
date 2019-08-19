@@ -71,7 +71,11 @@ struct sprite *qtg_load_gfxfile(const char *filename)
     entire->pm = pm;
     return entire;
   }
+#ifdef __ANDROID__
+  pm->load("assets:/" + QString(filename));
+#else /* __ANDROID__ */
   pm->load(QString(filename));
+#endif /* __ANDROID__ */
   entire->pm = pm;
   QPixmapCache::insert(QString(filename), *pm);
 

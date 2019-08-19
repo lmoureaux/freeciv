@@ -61,6 +61,10 @@ void qtg_gui_load_theme(const char *directory, const char *theme_name)
     real_data_dir = QString(directory);
   }
 
+#ifdef __ANDROID__
+  real_data_dir = "assets:/" + real_data_dir;
+#endif /* __ANDROID__ */
+
   path = real_data_dir + DIR_SEPARATOR + theme_name + DIR_SEPARATOR;
   name = path + "resource.qss";
   f.setFileName(name);
@@ -78,6 +82,10 @@ void qtg_gui_load_theme(const char *directory, const char *theme_name)
   stylestring = in.readAll();
   stylestring.replace(lnb, fake_dir + "/" + theme_name + "/");
 
+
+#ifdef __ANDROID__
+  QApplication::setStyle(QStyleFactory::create("android"));
+#else /* __ANDROID__ */
   if (QString(theme_name) == QString("System")) {
     QApplication::setStyle(QStyleFactory::create(def_app_style));
   } else {
@@ -99,6 +107,7 @@ void qtg_gui_load_theme(const char *directory, const char *theme_name)
   pal.setBrush(QPalette::Link, QColor(92,170,229));
   pal.setBrush(QPalette::LinkVisited, QColor(54,150,229));
   QApplication::setPalette(pal);
+#endif /* __ANDROID__ */
 }
 
 /*****************************************************************************
@@ -156,13 +165,22 @@ char **qtg_get_useable_themes_in_directory(const char *directory, int *count)
   QDir dir;
   QFile f;
 
+#ifdef __ANDROID__
+  dir.setPath("assets:/" + QString(directory));
+#else /* __ANDROID__ */
   dir.setPath(directory);
+#endif /* __ANDROID__ */
   sl << dir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
   name = QString(directory);
 
   foreach(str, sl) {
+#ifdef __ANDROID__
+    f.setFileName("assets:/" + name + DIR_SEPARATOR + str
+                  + DIR_SEPARATOR + "resource.qss");
+#else /* __ANDROID__ */
     f.setFileName(name + DIR_SEPARATOR + str
                   + DIR_SEPARATOR + "resource.qss");
+#endif /* __ANDROID__ */
     if (f.exists() == false) {
       continue;
     }
