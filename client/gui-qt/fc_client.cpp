@@ -221,7 +221,9 @@ void fc_client::init()
 
   connect(switch_page_mapper, SIGNAL(mapped( int)),
                 this, SLOT(switch_page(int)));
-#ifndef __ANDROID__
+#ifdef __ANDROID__
+  showMaximized();
+#else /* __ANDROID__ */
   resize(pages[PAGE_MAIN]->minimumSizeHint());
 #endif /* __ANDROID__ */
   setVisible(true);
