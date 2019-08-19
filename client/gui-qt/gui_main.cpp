@@ -40,6 +40,13 @@
 #include <QScrollBar>
 #include <QStyleFactory>
 
+#ifdef __ANDROID__
+#include <android/asset_manager_jni.h>
+#include <QtAndroidExtras/QtAndroid>
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#endif /* __ANDROID__ */
+
 // utility
 #include "fc_cmdline.h"
 #include "fciconv.h"
@@ -105,11 +112,48 @@ void qtg_set_city_names_font_sizes(int my_city_names_font_size,
 void qtg_ui_init()
 {}
 
+#ifdef __ANDROID__
+/****************************************************************************
+  Find the Android asset manager.
+****************************************************************************/
+static void init_android_asset_manager()
+{
+  QAndroidJniObject context, manager;
+  jobject *manager_ref;
+
+  /* Fetch the activity or service object */
+  context = QtAndroid::androidContext();
+  fc_assert_exit(context.isValid());
+
+  /* Fetch the assets manager */
+  manager = context.callObjectMethod(
+    "getAssets", "()Landroid/content/res/AssetManager;");
+  fc_assert_exit(manager.isValid());
+
+  /* Add a reference to the assets manager. Otherwise the JVM may destroy it
+     and bad things will happen. We leak the new reference (this function is
+     only called once). */
+  manager_ref = new jobject;
+  *manager_ref =
+    QAndroidJniEnvironment()->NewGlobalRef(manager.object<jobject>());
+
+  /* Get a native handle */
+  set_android_asset_manager(AAssetManager_fromJava(QAndroidJniEnvironment(),
+                                                   *manager_ref));
+  fc_assert_exit_msg(get_android_asset_manager() != NULL,
+                     "could not get asset manager native handle");
+}
+#endif /* __ANDROID__ */
+
 /**************************************************************************
   Entry point for whole freeciv client program.
 **************************************************************************/
 int main(int argc, char **argv)
 {
+#ifdef __ANDROID__
+  init_android_asset_manager();
+#endif /* __ANDROID */
+
   setup_gui_funcs();
   return client_main(argc, argv);
 }
