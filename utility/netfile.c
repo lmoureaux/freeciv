@@ -15,7 +15,7 @@
 #include <fc_config.h>
 #endif
 
-#include <curl/curl.h>
+//#include <curl/curl.h>
 
 #ifdef WIN32_NATIVE
 #include <windows.h>
@@ -31,13 +31,15 @@
 #include "netfile.h"
 
 struct netfile_post {
-  struct curl_httppost *first;
-  struct curl_httppost *last;
+//  struct curl_httppost *first;
+//  struct curl_httppost *last;
 };
 
 typedef size_t (*netfile_write_cb)(char *ptr, size_t size, size_t nmemb, void *userdata);
 
-static char error_buf_curl[CURL_ERROR_SIZE];
+//static char error_buf_curl[CURL_ERROR_SIZE];
+
+typedef struct CURL CURL;
 
 /********************************************************************** 
   Set handle to usable state.
@@ -48,13 +50,13 @@ static CURL *netfile_init_handle(void)
   static CURL *handle = NULL;
 
   if (handle == NULL) {
-    handle = curl_easy_init();
+//    handle = curl_easy_init();
   } else {
-    curl_easy_reset(handle);
+//    curl_easy_reset(handle);
   }
 
-  error_buf_curl[0] = '\0';
-  curl_easy_setopt(handle, CURLOPT_ERRORBUFFER, error_buf_curl);
+//  error_buf_curl[0] = '\0';
+//  curl_easy_setopt(handle, CURLOPT_ERRORBUFFER, error_buf_curl);
 
   return handle;
 }
@@ -83,30 +85,31 @@ static bool netfile_download_file_core(const char *URL, FILE *fp,
                                        struct netfile_write_cb_data *mem_data,
                                        nf_errmsg cb, void *data)
 {
-  CURLcode curlret;
+/*
+//  CURLcode curlret;
   struct curl_slist *headers = NULL;
   static CURL *handle;
   bool ret = TRUE;
 
   handle = netfile_init_handle();
 
-  headers = curl_slist_append(headers,"User-Agent: Freeciv/" VERSION_STRING);
+//  headers = curl_slist_append(headers,"User-Agent: Freeciv/" VERSION_STRING);
 
-  curl_easy_setopt(handle, CURLOPT_URL, URL);
+//  curl_easy_setopt(handle, CURLOPT_URL, URL);
   if (mem_data != NULL) {
     mem_data->mem = NULL;
     mem_data->size = 0;
-    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, netfile_memwrite_cb);
-    curl_easy_setopt(handle, CURLOPT_WRITEDATA, mem_data);
+//    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, netfile_memwrite_cb);
+//    curl_easy_setopt(handle, CURLOPT_WRITEDATA, mem_data);
   } else {
-    curl_easy_setopt(handle, CURLOPT_WRITEDATA, fp);
+//    curl_easy_setopt(handle, CURLOPT_WRITEDATA, fp);
   }
-  curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
-  curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1);
+//  curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+//  curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1);
 
-  curlret = curl_easy_perform(handle);
+//  curlret = curl_easy_perform(handle);
 
-  curl_slist_free_all(headers);
+//  curl_slist_free_all(headers);
 
   if (curlret != CURLE_OK) {
     if (cb != NULL) {
@@ -114,7 +117,7 @@ static bool netfile_download_file_core(const char *URL, FILE *fp,
 
       fc_snprintf(buf, sizeof(buf),
                   /* TRANS: first %s is URL, second is Curl error message
-                   * (not in Freeciv translation domain) */
+                   * (not in Freeciv translation domain) * /
                   _("Failed to fetch %s: %s"), URL,
                   error_buf_curl[0] != '\0' ? error_buf_curl : curl_easy_strerror(curlret));
       cb(buf, data);
@@ -124,6 +127,8 @@ static bool netfile_download_file_core(const char *URL, FILE *fp,
   }
 
   return ret;
+*/
+  return false;
 }
 
 /********************************************************************** 
@@ -191,10 +196,12 @@ struct netfile_post *netfile_start_post(void)
 void netfile_add_form_str(struct netfile_post *post,
                           const char *name, const char *val)
 {
+/*
   curl_formadd(&post->first, &post->last,
                CURLFORM_COPYNAME, name,
                CURLFORM_COPYCONTENTS, val,
                CURLFORM_END);
+*/
 }
 
 /********************************************************************** 
@@ -214,7 +221,7 @@ void netfile_add_form_int(struct netfile_post *post,
 ***********************************************************************/
 void netfile_close_post(struct netfile_post *post)
 {
-  curl_formfree(post->first);
+ // curl_formfree(post->first);
   FC_FREE(post);
 }
 
@@ -234,6 +241,7 @@ bool netfile_send_post(const char *URL, struct netfile_post *post,
                        FILE *reply_fp, struct netfile_write_cb_data *mem_data,
                        const char *addr)
 {
+/*
   CURLcode curlret;
   long http_resp;
   struct curl_slist *headers = NULL;
@@ -275,4 +283,6 @@ bool netfile_send_post(const char *URL, struct netfile_post *post,
   }
 
   return TRUE;
+*/
+  return FALSE;
 }
