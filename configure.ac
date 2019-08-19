@@ -586,14 +586,14 @@ AC_PROG_MAKE_SET
 dnl Check for libiconv (which is usually included in glibc, but may be
 dnl distributed separately).  The libcharset check must come after the
 dnl iconv check.  This whole thing must come before the gettext check below.
-AM_ICONV
-FC_LIBCHARSET
-AM_LANGINFO_CODESET
-if test "$am_cv_func_iconv" != yes; then
-  AC_MSG_ERROR([Iconv is missing. You can get libiconv from http://gnu.org/, \
-or try using --with-libiconv-prefix.])
-fi
-LIBS="$LIBS $LIBICONV"
+#AM_ICONV
+#FC_LIBCHARSET
+#AM_LANGINFO_CODESET
+#if test "$am_cv_func_iconv" != yes; then
+#  AC_MSG_ERROR([Iconv is missing. You can get libiconv from http://gnu.org/, \
+#or try using --with-libiconv-prefix.])
+#fi
+#LIBS="$LIBS $LIBICONV"
 
 dnl I18n support
 ALL_LINGUAS="ar bg cs ca da de el en_GB eo es et fa fi fr ga gd he hu id it ja 
