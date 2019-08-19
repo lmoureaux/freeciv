@@ -291,13 +291,20 @@ void fc_client::create_network_page(void)
   QHBoxLayout *page_network_wan_layout = new QHBoxLayout;
 
   connect_host_edit = new QLineEdit;
-  connect_port_edit = new QLineEdit;
+  connect_port_edit = new QLineEdit; // FIXME Switch to QSpinBox
   connect_login_edit = new QLineEdit;
   connect_password_edit = new QLineEdit;
   connect_confirm_password_edit = new QLineEdit;
 
   connect_password_edit->setEchoMode(QLineEdit::Password);
   connect_confirm_password_edit->setEchoMode(QLineEdit::Password);
+
+  connect(connect_login_edit, &QLineEdit::returnPressed,
+          this, &fc_client::slot_connect);
+  connect(connect_password_edit, &QLineEdit::returnPressed,
+          this, &fc_client::slot_connect);
+  connect(connect_confirm_password_edit, &QLineEdit::returnPressed,
+          this, &fc_client::slot_connect);
 
   connect_password_edit->setDisabled(true);
   connect_confirm_password_edit->setDisabled(true);
@@ -368,6 +375,52 @@ void fc_client::create_network_page(void)
   header->setSectionResizeMode(0, QHeaderView::Stretch);
   header->setStretchLastSection(true);
 
+#ifdef __ANDROID__
+  // Space at the top
+  QSpacerItem *spacer =
+    new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+  pages_layout[PAGE_NETWORK]->addItem(spacer, 0, 1);
+
+  // Server
+  pages_layout[PAGE_NETWORK]->addWidget(new QLabel(_("Server")), 1, 1);
+  connect_host_edit->setMaximumSize(300, 1000);
+  pages_layout[PAGE_NETWORK]->addWidget(connect_host_edit, 2, 1);
+
+  spacer = new QSpacerItem(0, 30, QSizePolicy::Minimum, QSizePolicy::Fixed);
+  pages_layout[PAGE_NETWORK]->addItem(spacer, 3, 1);
+
+  // Port
+  pages_layout[PAGE_NETWORK]->addWidget(new QLabel(_("Port")), 4, 1);
+  connect_port_edit->setMaximumSize(300, 1000);
+  pages_layout[PAGE_NETWORK]->addWidget(connect_port_edit, 5, 1);
+
+  spacer = new QSpacerItem(0, 30, QSizePolicy::Minimum, QSizePolicy::Fixed);
+  pages_layout[PAGE_NETWORK]->addItem(spacer, 6, 1);
+
+  // Login
+  pages_layout[PAGE_NETWORK]->addWidget(new QLabel(_("Login")), 7, 1);
+  connect_login_edit->setMaximumSize(300, 1000);
+  pages_layout[PAGE_NETWORK]->addWidget(connect_login_edit, 8, 1);
+
+  spacer = new QSpacerItem(0, 30, QSizePolicy::Minimum, QSizePolicy::Fixed);
+  pages_layout[PAGE_NETWORK]->addItem(spacer, 9, 1);
+
+  // Connect button here
+  network_button = new QPushButton(_("Connect"));
+  network_button->setMaximumSize(300, 1000);
+  connect(network_button, &QAbstractButton::clicked, this, &fc_client::slot_connect);
+  pages_layout[PAGE_NETWORK]->addWidget(network_button, 10, 1);
+
+  // Space at the bottom
+  spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+  pages_layout[PAGE_NETWORK]->addItem(spacer, 11, 1);
+
+  // Horizontal margins in horizontal mode
+  spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+  pages_layout[PAGE_NETWORK]->addItem(spacer, 0, 0); // Left
+  spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+  pages_layout[PAGE_NETWORK]->addItem(spacer, 0, 2); // Right 
+#else /* __ANDROID__ */
   QStringList label_names;
   label_names << _("Connect") << _("Port") << _("Login")
               << _("Password") << _("Confirm Password");
@@ -399,12 +452,6 @@ void fc_client::create_network_page(void)
   network_button = new QPushButton(_("Connect"));
   page_network_grid_layout->addWidget(network_button, 5, 5, 1, 1);
   connect(network_button, &QAbstractButton::clicked, this, &fc_client::slot_connect);
-  connect(connect_login_edit, &QLineEdit::returnPressed,
-          this, &fc_client::slot_connect);
-  connect(connect_password_edit, &QLineEdit::returnPressed,
-          this, &fc_client::slot_connect);
-  connect(connect_confirm_password_edit, &QLineEdit::returnPressed,
-          this, &fc_client::slot_connect);
 
   connect_lan->setLayout(page_network_lan_layout);
   connect_metaserver->setLayout(page_network_wan_layout);
@@ -419,7 +466,7 @@ void fc_client::create_network_page(void)
   page_network_grid_layout->setColumnStretch(3, 4);
   pages_layout[PAGE_NETWORK]->addLayout(page_network_layout, 1, 1);
   pages_layout[PAGE_NETWORK]->addLayout(page_network_grid_layout, 2, 1);
-
+#endif /* __ANDROID__ */
 }
 
 /***************************************************************************
