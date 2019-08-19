@@ -291,32 +291,33 @@ freeciv_xaw_LDADD = \
 endif
 
 if CLIENT_GUI_QT
-bin_PROGRAMS += freeciv-qt
-noinst_LTLIBRARIES += libfcgui-qt.la
-libfcgui_qt_la_SOURCES = $(freeciv_client_src)
-libfcgui_qt_la_LIBADD = gui-qt/libgui-qt.la $(clientlibs)
-freeciv_qt_SOURCES = dummycxx.cpp $(gui_interface_src)
-freeciv_qt_LDFLAGS = $(gui_qt_ldflags)
-freeciv_qt_LDADD = \
+lib_LTLIBRARIES = libfreeciv-qt.la
+#noinst_LTLIBRARIES += libfcgui-qt.la
+#libfcgui_qt_la_SOURCES = $(freeciv_client_src)
+#libfcgui_qt_la_LIBADD = gui-qt/libgui-qt.la $(clientlibs)
+libfreeciv_qt_la_SOURCES = dummycxx.cpp $(freeciv_client_src) $(gui_interface_src)
+libfreeciv_qt_la_LDFLAGS = $(gui_qt_ldflags)
+libfreeciv_qt_la_LIBADD = \
+ -lQt5AndroidExtras \
  $(SOUND_LIBS) \
- libfcgui-qt.la \
  $(top_builddir)/common/libfreeciv.la \
+ gui-qt/libgui-qt.la $(clientlibs) \
  $(INTLLIBS) $(CLIENT_LIBS) $(SOUND_LIBS) $(CLIENTICON) \
  $(MAPIMG_WAND_LIBS) \
  $(gui_qt_libs)
 endif
 
 if CLIENT_GUI_STUB
-bin_PROGRAMS += freeciv-stub
-noinst_LTLIBRARIES += libfcgui-stub.la
-libfcgui_stub_la_SOURCES = $(freeciv_client_src)
-libfcgui_stub_la_LIBADD = gui-stub/libgui-stub.la $(clientlibs)
-freeciv_stub_SOURCES = $(gui_interface_src) $(gui_cbs_src)
-freeciv_stub_LDFLAGS = $(gui_stub_ldflags)
-freeciv_stub_LDADD = \
- libfcgui-stub.la \
- $(top_builddir)/common/libfreeciv.la \
- $(INTLLIBS) $(CLIENT_LIBS) $(SOUND_LIBS) $(CLIENTICON) \
- $(MAPIMG_WAND_LIBS) \
- $(gui_stub_libs)
+#bin_PROGRAMS += freeciv-stub
+#noinst_LTLIBRARIES += libfcgui-stub.la
+#libfcgui_stub_la_SOURCES = $(freeciv_client_src)
+#libfcgui_stub_la_LIBADD = gui-stub/libgui-stub.la $(clientlibs)
+#freeciv_stub_SOURCES = $(gui_interface_src) $(gui_cbs_src)
+#freeciv_stub_LDFLAGS = $(gui_stub_ldflags)
+#freeciv_stub_LDADD = \
+# libfcgui-stub.la \
+# $(top_builddir)/common/libfreeciv.la \
+# $(INTLLIBS) $(CLIENT_LIBS) $(SOUND_LIBS) $(CLIENTICON) \
+# $(MAPIMG_WAND_LIBS) \
+# $(gui_stub_libs)
 endif

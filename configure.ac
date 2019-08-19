@@ -559,7 +559,7 @@ AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_LN_S
-AC_DISABLE_SHARED
+dnl AC_DISABLE_SHARED
 dnl Replace AC_PROG_LIBTOOL with LT_INIT when minimum libtool
 dnl version 2.2
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR], [AC_CHECK_TOOL([AR], [ar])])

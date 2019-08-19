@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-noinst_LTLIBRARIES = \
+lib_LTLIBRARIES = \
 	libscripting_client.la
 
 AM_CPPFLAGS = \
