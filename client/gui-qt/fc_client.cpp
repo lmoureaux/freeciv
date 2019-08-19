@@ -142,7 +142,9 @@ void fc_client::init()
 {
   fc_font::instance()->init_fonts();
   read_settings();
+#ifndef __ANDROID__ /* Default font is too small */
   QApplication::setFont(*fc_font::instance()->get_font(fonts::default_font));
+#endif /* __ANDROID__ */
   QString path;
   central_wdg = new QWidget;
   central_layout = new QStackedLayout;
@@ -219,7 +221,9 @@ void fc_client::init()
 
   connect(switch_page_mapper, SIGNAL(mapped( int)),
                 this, SLOT(switch_page(int)));
+#ifndef __ANDROID__
   resize(pages[PAGE_MAIN]->minimumSizeHint());
+#endif /* __ANDROID__ */
   setVisible(true);
 
   game_tab_widget->init();
