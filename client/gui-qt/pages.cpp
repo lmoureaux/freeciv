@@ -26,6 +26,7 @@
 #include <QLineEdit>
 #include <QPainter>
 #include <QSignalMapper>
+#include <QSpinBox>
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QTableWidget>
@@ -291,7 +292,7 @@ void fc_client::create_network_page(void)
   QHBoxLayout *page_network_wan_layout = new QHBoxLayout;
 
   connect_host_edit = new QLineEdit;
-  connect_port_edit = new QLineEdit; // FIXME Switch to QSpinBox
+  connect_port_edit = new QSpinBox;
   connect_login_edit = new QLineEdit;
   connect_password_edit = new QLineEdit;
   connect_confirm_password_edit = new QLineEdit;
@@ -306,6 +307,7 @@ void fc_client::create_network_page(void)
   connect(connect_confirm_password_edit, &QLineEdit::returnPressed,
           this, &fc_client::slot_connect);
 
+  connect_port_edit->setRange(0, 0xffff);
   connect_password_edit->setDisabled(true);
   connect_confirm_password_edit->setDisabled(true);
   connect_lan = new QWidget;
@@ -384,6 +386,7 @@ void fc_client::create_network_page(void)
   // Server
   pages_layout[PAGE_NETWORK]->addWidget(new QLabel(_("Server")), 1, 1);
   connect_host_edit->setMaximumSize(300, 1000);
+  connect_host_edit->setClearButtonEnabled(true);
   pages_layout[PAGE_NETWORK]->addWidget(connect_host_edit, 2, 1);
 
   spacer = new QSpacerItem(0, 30, QSizePolicy::Minimum, QSizePolicy::Fixed);
@@ -400,6 +403,7 @@ void fc_client::create_network_page(void)
   // Login
   pages_layout[PAGE_NETWORK]->addWidget(new QLabel(_("Login")), 7, 1);
   connect_login_edit->setMaximumSize(300, 1000);
+  connect_login_edit->setClearButtonEnabled(true);
   pages_layout[PAGE_NETWORK]->addWidget(connect_login_edit, 8, 1);
 
   spacer = new QSpacerItem(0, 30, QSizePolicy::Minimum, QSizePolicy::Fixed);
@@ -930,8 +934,7 @@ void fc_client::update_server_list(enum server_scan_type sstype,
   }
 
   host = connect_host_edit->text();
-  portstr = connect_port_edit->text();
-  port = portstr.toInt();
+  port = connect_port_edit->value();
   old_row_count = sel->rowCount();
   sel->clearContents();
   row = 0;
@@ -1188,7 +1191,7 @@ void fc_client::slot_selection_changed(const QItemSelection &selected,
     index = indexes.at(0);
     connect_host_edit->setText(index.data().toString());
     index = indexes.at(1);
-    connect_port_edit->setText(index.data().toString());
+    connect_port_edit->setValue(index.data().toString().toInt());
 
     tw = qobject_cast<QItemSelectionModel *>(sender());
 
@@ -1593,7 +1596,7 @@ void fc_client::slot_connect()
   case LOGIN_TYPE:
     sz_strlcpy(user_name, connect_login_edit->text().toLocal8Bit().data());
     sz_strlcpy(server_host, connect_host_edit->text().toLocal8Bit().data());
-    server_port = connect_port_edit->text().toInt();
+    server_port = connect_port_edit->value();
 
     if (connect_to_server(user_name, server_host, server_port,
                           errbuf, sizeof(errbuf)) != -1) {

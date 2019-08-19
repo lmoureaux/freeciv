@@ -185,7 +185,7 @@ class fc_client : public QMainWindow,
   QCheckBox *show_preview;
 
   QLineEdit *connect_host_edit;
-  QLineEdit *connect_port_edit;
+  QSpinBox *connect_port_edit;
   QLineEdit *connect_login_edit;
   QLineEdit *connect_password_edit;
   QLineEdit *connect_confirm_password_edit;
