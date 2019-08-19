@@ -20,6 +20,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef __ANDROID__
+# include <android/log.h>
+#endif
+
 /* utility */
 #include "fciconv.h"
 #include "fcintl.h"
@@ -322,6 +326,32 @@ bool log_do_output_for_level_at_location(enum log_level level,
 static void log_write(FILE *fs, enum log_level level, bool print_from_where,
                       const char *where, const char *message)
 {
+#ifdef __ANDROID__
+  android_LogPriority priority;
+  switch (level) {
+    case LOG_FATAL:
+      priority = ANDROID_LOG_FATAL;
+          break;
+    case LOG_ERROR:
+      priority = ANDROID_LOG_ERROR;
+          break;
+    case LOG_NORMAL:
+      priority = ANDROID_LOG_INFO;
+          break;
+    case LOG_VERBOSE:
+      priority = ANDROID_LOG_VERBOSE;
+          break;
+    case LOG_DEBUG:
+      priority = ANDROID_LOG_DEBUG;
+          break;
+  }
+
+  if (print_from_where && where) {
+    __android_log_print(priority, "freeciv", "%s%s", where, message);
+  } else {
+    __android_log_print(priority, "freeciv", "%s", message);
+  }
+#else // __ANDROID__
   if (log_filename || (!log_callback)) {
     char prefix[128];
 
@@ -350,6 +380,7 @@ static void log_write(FILE *fs, enum log_level level, bool print_from_where,
       log_callback(level, message, log_filename != NULL);
     }
   }
+#endif // __ANDROID__
 }
 
 /*****************************************************************************
