@@ -181,6 +181,12 @@ void remove_escapes(const char *str, bool full_escapes,
 
 int fc_at_quick_exit(void (*func)(void));
 
+#ifdef __ANDROID__
+struct AAssetManager;
+struct AAssetManager *get_android_asset_manager();
+void set_android_asset_manager(struct AAssetManager *mgr);
+#endif /* __ANDROID__ */
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

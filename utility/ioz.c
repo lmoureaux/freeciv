@@ -52,6 +52,10 @@
 #include <lzma.h>
 #endif
 
+#ifdef __ANDROID__
+#include <android/asset_manager.h>
+#endif
+
 /* utility */
 #include "log.h"
 #include "mem.h"
@@ -136,6 +140,9 @@ struct fz_FILE_s {
 #ifdef FREECIV_HAVE_LIBLZMA
     struct xz_struct xz;
 #endif
+#ifdef __ANDROID__
+    /* Nothing, uses mem */
+#endif
   } u;
 };
 
@@ -154,6 +161,9 @@ static inline bool fz_method_is_valid(enum fz_method method)
 #endif
 #ifdef FREECIV_HAVE_LIBLZMA
   case FZ_XZ:
+#endif
+#ifdef __ANDROID__
+  case FZ_ANDROID_ASSET:
 #endif
     return TRUE;
   }
@@ -202,6 +212,7 @@ fz_FILE *fz_from_file(const char *filename, const char *in_mode,
   char mode[64];
 
   if (!is_reg_file_for_access(filename, in_mode[0] == 'w')) {
+    log_error("Cannot open %s?!", filename);
     return NULL;
   }
 
@@ -222,6 +233,39 @@ fz_FILE *fz_from_file(const char *filename, const char *in_mode,
 
     /* Reading: ignore specified method and try each: */
     fp->mode = 'r';
+
+#ifdef __ANDROID__
+    /* Try to open as an Android asset. */
+    AAsset *asset = AAssetManager_open(get_android_asset_manager(),
+                                       filename, AASSET_MODE_BUFFER);
+    if (asset) {
+      const char *tmpbuf;
+      off_t size;
+
+      asset = AAssetManager_open(get_android_asset_manager(),
+                                 filename, AASSET_MODE_BUFFER);
+      if (asset) {
+        size = AAsset_getLength(asset);
+        if (size >= 0
+            && (fp->u.mem.buffer = fc_malloc(size + 1))
+            && (tmpbuf = AAsset_getBuffer(asset))) {
+          memcpy(fp->u.mem.buffer, tmpbuf, size);
+          fp->method = FZ_ANDROID_ASSET;
+          fp->memory = TRUE;
+          fp->u.mem.buffer[size] = '\0';
+          fp->u.mem.control = TRUE;
+          fp->u.mem.size = size;
+          fp->u.mem.pos = 0;
+
+          AAsset_close(asset);
+          return fp;
+        }
+        log_error("Error reading the contents of asset %s", filename);
+        free(fp);
+        return NULL;
+      }
+    }
+#endif /* __ANDROID___ */
 
 #ifdef FREECIV_HAVE_LIBBZ2
     /* Try to open as bzip2 file
@@ -423,6 +467,12 @@ fz_FILE *fz_from_file(const char *filename, const char *in_mode,
     }
     return fp;
 #endif /* FREECIV_HAVE_LIBZ */
+#ifdef __ANDROID__
+  case FZ_ANDROID_ASSET:
+    free(fp);
+    fp = NULL;
+    return fp;
+#endif /* __ANDROID__ */
   case FZ_PLAIN:
     fp->u.plain = fc_fopen(filename, mode);
     if (!fp->u.plain) {
@@ -505,6 +555,11 @@ int fz_fclose(fz_FILE *fp)
     free(fp);
     return BZ_OK == error ? 0 : 1;
 #endif /* FREECIV_HAVE_LIBBZ2 */
+#ifdef __ANDROID__
+  case FZ_ANDROID_ASSET:
+    /* The asset is closed in open() */
+    return 0;
+#endif
 #ifdef FREECIV_HAVE_LIBZ
   case FZ_ZLIB:
     error = gzclose(fp->u.zlib);
@@ -706,6 +761,11 @@ char *fz_fgets(char *buffer, int size, fz_FILE *fp)
 #endif /* FREECIV_HAVE_LIBZ */
   case FZ_PLAIN:
     return fgets(buffer, size, fp->u.plain);
+#ifdef __ANDROID__
+  case FZ_ANDROID_ASSET:
+    /* EOF */
+    return NULL;
+#endif /* __ANDROID__ */
   }
 
   /* Should never happen */
@@ -899,6 +959,11 @@ int fz_ferror(fz_FILE *fp)
       return 0 > error ? error : 0; /* Only negative Z values are errors. */
     }
 #endif /* FREECIV_HAVE_LIBZ */
+#ifdef __ANDROID__
+  case FZ_ANDROID_ASSET:
+    /* No error possible */
+    return 0;
+#endif
   case FZ_PLAIN:
     return ferror(fp->u.plain);
     break;

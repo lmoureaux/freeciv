@@ -95,6 +95,10 @@
 #include <zlib.h>
 #endif
 
+#ifdef __ANDROID__
+#include <android/asset_manager.h>
+#endif
+
 /* utility */
 #include "fciconv.h"
 #include "fcintl.h"
@@ -103,6 +107,10 @@
 #include "netintf.h"
 
 #include "support.h"
+
+#ifdef __ANDROID__
+struct AAssetManager *android_asset_mgr = NULL;
+#endif /* __ANDROID__ */
 
 /***************************************************************
   Compare strings like strcmp(), but ignoring case.
@@ -460,6 +468,21 @@ int fc_stat(const char *filename, struct stat *buf)
 	free(filename_in_local_encoding);
 	return result;
 #else  /* WIN32_NATIVE */
+#ifdef __ANDROID__
+  /* Try to open as an Android asset. */
+  AAsset *asset;
+
+  if ((asset = AAssetManager_open(get_android_asset_manager(),
+                                  filename, AASSET_MODE_BUFFER))) {
+    /* Fill the fields we can */
+    memset(buf, 0, sizeof(struct stat));
+    buf->st_mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
+    buf->st_size = AAsset_getLength(asset);
+
+    AAsset_close(asset);
+    return 0;
+  }
+#endif /* __ANDROID__ */
 	return stat(filename, buf);
 #endif /* WIN32_NATIVE */
 }
@@ -1174,3 +1197,21 @@ int fc_at_quick_exit(void (*func)(void))
   return -1;
 #endif /* HAVE_AT_QUICK_EXIT */
 }
+
+#ifdef __ANDROID__
+/****************************************************************************
+  Gets the Android asset manager. Returns NULL if not set.
+****************************************************************************/
+struct AAssetManager *get_android_asset_manager()
+{
+  return android_asset_mgr;
+}
+
+/****************************************************************************
+  Sets the Android asset manager to be used by freeciv.
+****************************************************************************/
+void set_android_asset_manager(struct AAssetManager *mgr)
+{
+  android_asset_mgr = mgr;
+}
+#endif /* __ANDROID__ */

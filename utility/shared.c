@@ -50,6 +50,10 @@
 #endif /* HAVE_DIRECT_H */
 #endif /* WIN32_NATIVE */
 
+#ifdef __ANDROID__
+#include <android/asset_manager.h>
+#endif /* __ANDROID__ */
+
 /* utility */
 #include "astring.h"
 #include "fciconv.h"
@@ -1078,11 +1082,20 @@ struct strvec *fileinfolist(const struct strvec *dirs, const char *suffix)
 
   /* First assemble a full list of names. */
   strvec_iterate(dirs, dirname) {
+
+    /* Open the directory for reading. */
+#ifdef __ANDROID__
+    AAssetDir *dir;
+    const char *d_name;
+
+    dir = AAssetManager_openDir(get_android_asset_manager(), dirname);
+#else /* __ANDROID__ */
     DIR *dir;
     struct dirent *entry;
 
-    /* Open the directory for reading. */
     dir = fc_opendir(dirname);
+#endif /* __ANDROID__ */
+
     if (!dir) {
       if (errno == ENOENT) {
         log_verbose("Skipping non-existing data directory %s.",
@@ -1096,14 +1109,20 @@ struct strvec *fileinfolist(const struct strvec *dirs, const char *suffix)
     }
 
     /* Scan all entries in the directory. */
+#ifdef __ANDROID__
+    while ((d_name = AAssetDir_getNextFileName(dir))) {
+#else /* __ANDROID__ */
     while ((entry = readdir(dir))) {
-      size_t len = strlen(entry->d_name);
+      const char *d_name = enrty->d_name;
+#endif /* __ANDROID__ */
+
+      size_t len = strlen(d_name);
 
       /* Make sure the file name matches. */
       if (len > suffix_len
-          && strcmp(suffix, entry->d_name + len - suffix_len) == 0) {
+          && strcmp(suffix, d_name + len - suffix_len) == 0) {
         /* Strdup the entry so we can safely write to it. */
-        char *match = fc_strdup(entry->d_name);
+        char *match = fc_strdup(d_name);
 
         /* Clip the suffix. */
         match[len - suffix_len] = '\0';
@@ -1113,7 +1132,11 @@ struct strvec *fileinfolist(const struct strvec *dirs, const char *suffix)
       }
     }
 
+#ifdef __ANDROID__
+      AAssetDir_close(dir);
+#else /* __ANDROID__ */
     closedir(dir);
+#endif /* __ANDROID__ */
   } strvec_iterate_end;
 
   /* Sort the list and remove duplications. */
@@ -1179,6 +1202,19 @@ const char *fileinfoname(const struct strvec *dirs, const char *filename)
   fnbuf[i] = '\0';
 #endif /* DIR_SEPARATOR_IS_DEFAULT */
 
+#ifdef __ANDROID__
+  strvec_iterate(dirs, dirname) {
+    AAsset *file;
+
+    astr_set(&realfile, "%s" DIR_SEPARATOR "%s", dirname, fnbuf);
+    if ((file = AAssetManager_open(get_android_asset_manager(),
+                                   astr_str(&realfile),
+                                   AASSET_MODE_UNKNOWN))) {
+      AAsset_close(file);
+      return astr_str(&realfile);
+    }
+  } strvec_iterate_end;
+#else /* __ANDROID__ */
   strvec_iterate(dirs, dirname) {
     struct stat buf;    /* see if we can open the file or directory */
 
@@ -1187,6 +1223,7 @@ const char *fileinfoname(const struct strvec *dirs, const char *filename)
       return astr_str(&realfile);
     }
   } strvec_iterate_end;
+#endif /* __ANDROID__ */
 
   log_verbose("Could not find readable file \"%s\" in data path.", filename);
 
