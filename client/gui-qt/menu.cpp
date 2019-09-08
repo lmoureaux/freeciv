@@ -558,8 +558,10 @@ void qfc_units_list::clear()
 **************************************************************************/
 void real_menus_init(void)
 {
-  gui()->menu_bar->clear();
-  gui()->menu_bar->setup_menus();
+  if (gui()->menu_bar) {
+    gui()->menu_bar->clear();
+    gui()->menu_bar->setup_menus();
+  }
 
   gov_menu::create_all();
 }
@@ -571,7 +573,6 @@ void real_menus_init(void)
 void real_menus_update(void)
 {
   if (C_S_RUNNING <= client_state()) {
-    gui()->menuBar()->setVisible(true);
     if (is_waiting_turn_change() == false) {
       gui()->menu_bar->menus_sensitive();
       gui()->menu_bar->update_airlift_menu();
@@ -579,9 +580,11 @@ void real_menus_update(void)
       gui()->menu_bar->update_bases_menu();
       gov_menu::update_all();
       gui()->unitinfo_wdg->update_actions(nullptr);
+      if (gui()->menuBar() && gui()->menuBar() != gui()->menu_bar) gui()->menuBar()->deleteLater();
+      gui()->setMenuBar(gui()->menu_bar);
     }
   } else {
-    gui()->menuBar()->setVisible(false);
+    if (gui()->menuBar() == gui()->menu_bar) gui()->setMenuBar(new QMenuBar);
   }
 }
 
@@ -1463,7 +1466,7 @@ void mr_menu::setup_menus()
   for (i = 0; i < menus.count(); i++) {
     menus[i]->setAttribute(Qt::WA_TranslucentBackground);
   }
-  this->setVisible(false);
+  //this->setVisible(false);
 }
 
 /****************************************************************************
@@ -3347,4 +3350,3 @@ void multiairlift(struct city *acity, Unit_type_id ut)
     }
   } city_list_iterate_end;
 }
-
