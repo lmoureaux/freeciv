@@ -524,7 +524,7 @@ hud_units::hud_units(QWidget *parent) : QFrame(parent)
   vbox->setSpacing(0);
   unit_lab->addWidget(&unit_label);
   main_layout->addLayout(unit_lab);
-  main_layout->addWidget(&tile_label);
+  //main_layout->addWidget(&tile_label);
   unit_icons = new unit_actions(this, nullptr);
   vbox->addSpacerItem(sp);
   vbox->addWidget(&text_label);
@@ -536,7 +536,7 @@ hud_units::hud_units(QWidget *parent) : QFrame(parent)
   vbox->setSpacing(3);
   vbox->setContentsMargins(0, 0, 0, 0);
   setLayout(main_layout);
-  mw = new move_widget(this);
+  //mw = new move_widget(this);
   setFocusPolicy(Qt::ClickFocus);
 
 }
@@ -554,10 +554,12 @@ hud_units::~hud_units()
 ****************************************************************************/
 void hud_units::moveEvent(QMoveEvent *event)
 {
+/*
   gui()->qt_settings.unit_info_pos_fx = static_cast<float>(event->pos().x())
                                         / gui()->mapview_wdg->width();
   gui()->qt_settings.unit_info_pos_fy = static_cast<float>(event->pos().y())
                                         / gui()->mapview_wdg->height();
+*/
 }
 
 
@@ -599,10 +601,12 @@ void hud_units::update_actions(unit_list *punits)
   setFixedHeight(parentWidget()->height() / 12);
   text_label.setFixedHeight((height() * 2) / 10);
 
+  /*
   move(qRound(gui()->mapview_wdg->width()
         * gui()->qt_settings.unit_info_pos_fx),
        qRound((gui()->mapview_wdg->height()
         * gui()->qt_settings.unit_info_pos_fy)));
+  */
   unit_icons->setFixedHeight((height() * 8) / 10);
 
   setUpdatesEnabled(false);
@@ -754,9 +758,12 @@ void hud_units::update_actions(unit_list *punits)
   qtg_canvas_free(tile_pixmap);
   qtg_canvas_free(unit_pixmap);
 
+  unit_icons->update_actions();
+  /*
   setFixedWidth(wwidth + qMax(unit_icons->update_actions() * (height() * 8)
                               / 10, text_label.width()));
-  mw->put_to_corner();
+  */
+  //mw->put_to_corner();
   if (tmp != nullptr) {
     tileset = tmp;
   }
@@ -797,13 +804,11 @@ void click_label::on_clicked()
 /****************************************************************************
   Hud action constructor, used to show one action
 ****************************************************************************/
-hud_action::hud_action(QWidget *parent) : QWidget(parent)
+hud_action::hud_action(QWidget *parent) : QToolButton(parent)
 {
-  connect(this, &hud_action::left_clicked, this, &hud_action::on_clicked);
-  setFocusPolicy(Qt::StrongFocus);
-  setMouseTracking(true);
-  focus = false;
-  action_pixmap = nullptr;
+  connect(this, &QToolButton::clicked,
+      [&] (bool) { gui()->menu_bar->execute_shortcut(action_shortcut); });
+  setAutoRaise(true);
 }
 
 /****************************************************************************
@@ -811,32 +816,9 @@ hud_action::hud_action(QWidget *parent) : QWidget(parent)
 ****************************************************************************/
 void hud_action::set_pixmap(QPixmap *p)
 {
-  action_pixmap = p;
-}
-
-/****************************************************************************
-  Custom painting for hud_action
-****************************************************************************/
-void hud_action::paintEvent(QPaintEvent *event)
-{
-  QRect rx, ry, rz;
-  QPainter p;
-
-  rx = QRect(0, 0, width(), height());
-  ry = QRect(0, 0, action_pixmap->width(), action_pixmap->height());
-  rz = QRect(0, 0, width() - 1, height() - 3);
-  p.begin(this);
-  p.setCompositionMode(QPainter::CompositionMode_Source);
-  p.setRenderHint(QPainter::SmoothPixmapTransform);
-  p.drawPixmap(rx, *action_pixmap, ry);
-  p.setPen(QColor(palette().color(QPalette::Text)));
-  p.drawRect(rz);
-   if (focus == true) {
-     p.setCompositionMode(QPainter::CompositionMode_DestinationOver);
-     p.fillRect(rx, QColor(palette().color(QPalette::Highlight)));
-   }
-  p.end();
-
+  if (!p) return;
+  setIcon(QIcon(*p));
+  setIconSize(p->size());
 }
 
 /****************************************************************************
@@ -844,64 +826,6 @@ void hud_action::paintEvent(QPaintEvent *event)
 ****************************************************************************/
 hud_action::~hud_action()
 {
-  if (action_pixmap) {
-    delete action_pixmap;
-  }
-}
-
-/****************************************************************************
-  Mouse press event for hud_action
-****************************************************************************/
-void hud_action::mousePressEvent(QMouseEvent *e)
-{
-  if (e->button() == Qt::RightButton) {
-    emit right_clicked();
-  } else if (e->button() == Qt::LeftButton) {
-    emit left_clicked();
-  }
-}
-
-/****************************************************************************
-  Mouse move event for hud_action, draw focus
-****************************************************************************/
-void hud_action::mouseMoveEvent(QMouseEvent *event)
-{
-  focus = true;
-  update();
-}
-/****************************************************************************
-  Leave event for hud_action, used to get status of pixmap higlight
-****************************************************************************/
-void hud_action::leaveEvent(QEvent *event)
-{
-  focus = false;
-  update();
-  QWidget::leaveEvent(event);
-}
-
-/****************************************************************************
-  Enter event for hud_action, used to get status of pixmap higlight
-****************************************************************************/
-void hud_action::enterEvent(QEvent *event)
-{
-  focus = true;
-  update();
-  QWidget::enterEvent(event);
-}
-
-/****************************************************************************
-  Right click event for hud_action
-****************************************************************************/
-void hud_action::on_right_clicked()
-{
-}
-
-/****************************************************************************
-  Left click event for hud_action
-****************************************************************************/
-void hud_action::on_clicked()
-{
-  gui()->menu_bar->execute_shortcut(action_shortcut);
 }
 
 /****************************************************************************
@@ -1148,7 +1072,7 @@ int unit_actions::update_actions()
     layout->addWidget(a);
   }
 
-  setFixedWidth(actions.count() * height());
+  //setFixedWidth(actions.count() * height());
   setUpdatesEnabled(true);
   show();
   layout->update();

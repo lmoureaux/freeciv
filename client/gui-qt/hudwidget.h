@@ -22,6 +22,7 @@
 #include <QMessageBox>
 #include <QRubberBand>
 #include <QTableWidget>
+#include <QToolButton>
 
 // common
 #include "unit.h"
@@ -147,28 +148,14 @@ protected:
 /****************************************************************************
   Single action on unit actions
 ****************************************************************************/
-class hud_action : public QWidget
+class hud_action : public QToolButton
 {
   Q_OBJECT
-  QPixmap *action_pixmap;
-  bool focus;
 public:
   hud_action(QWidget *parent);
   ~hud_action();
   void set_pixmap(QPixmap *p);
   shortcut_id action_shortcut;
-signals:
-  void left_clicked();
-  void right_clicked();
-protected:
-  void paintEvent(QPaintEvent *event);
-  void mousePressEvent(QMouseEvent *e);
-  void mouseMoveEvent(QMouseEvent *event);
-  void leaveEvent(QEvent *event);
-  void enterEvent(QEvent *event);
-private slots:
-  void on_clicked();
-  void on_right_clicked();
 };
 
 /****************************************************************************

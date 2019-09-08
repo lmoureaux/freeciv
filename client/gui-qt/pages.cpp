@@ -761,6 +761,7 @@ void fc_client::create_game_page()
   game_layout->setSpacing(0);
   mapview_wdg = new map_view();
   mapview_wdg->setFocusPolicy(Qt::WheelFocus);
+  mapview_wdg->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   sidebar_wdg = new fc_sidebar();
 
   sw_map = new fc_sidewidget(fc_icons::instance()->get_pixmap("view"),
@@ -808,6 +809,7 @@ void fc_client::create_game_page()
   minimapview_wdg = new minimap_view(mapview_wdg);
   minimapview_wdg->show();
   unitinfo_wdg = new hud_units(mapview_wdg);
+  unitinfo_wdg->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   battlelog_wdg = new hud_battle_log(mapview_wdg);
   battlelog_wdg->hide();
   infotab = new info_tab(mapview_wdg);
@@ -818,9 +820,10 @@ void fc_client::create_game_page()
   gtd->hide();
 
   game_layout->addWidget(mapview_wdg, 1, 0);
+  game_layout->addWidget(unitinfo_wdg, 2, 0);
   game_main_widget->setLayout(game_layout);
   game_tab_widget = new fc_game_tab_widget;
-  game_tab_widget->setMinimumSize(600,400);
+  //game_tab_widget->setMinimumSize(600,400);
   game_tab_widget->setContentsMargins(0, 0, 0, 0);
   add_game_tab(game_main_widget);
   if (gui_options.gui_qt_sidebar_left) {
