@@ -82,6 +82,7 @@ class map_view : public QWidget
   void shortcut_released(Qt::MouseButton mb);
 public:
   map_view();
+  bool event(QEvent *event) override;
   void paint(QPainter *painter, QPaintEvent *event);
   void find_place(int pos_x, int pos_y, int &w, int &h, int wdth, int hght, 
                   int recursive_nr);

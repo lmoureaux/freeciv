@@ -15,10 +15,13 @@
 #include <fc_config.h>
 #endif
 
+#include <cmath>
+
 // Qt
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPixmap>
+#include <QScroller>
 #include <QToolTip>
 #include <QWheelEvent>
 
@@ -199,6 +202,39 @@ map_view::map_view() : QWidget()
   setMouseTracking(true);
   stored_autocenter = gui_options.auto_center_on_unit;
   setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+  setAttribute(Qt::WA_AcceptTouchEvents, true);
+  QScroller::grabGesture(this, QScroller::TouchGesture);
+}
+
+/**************************************************************************
+  Handle events (enable QScroller scrolling)
+**************************************************************************/
+bool map_view::event(QEvent *event)
+{
+  QScrollPrepareEvent *scroll_prepare;
+  QScrollEvent *scroll;
+  float xmin, ymin, xmax, ymax;
+  int x, y;
+
+  if (event->type() == QEvent::ScrollPrepare &&
+      (scroll_prepare = dynamic_cast<QScrollPrepareEvent *>(event))) {
+    scroll_prepare->accept();
+    // This probably prevents overshoot, but works
+    scroll_prepare->setContentPosRange(
+      QRectF(-HUGE_VAL, -HUGE_VAL, HUGE_VAL, HUGE_VAL));
+    scroll_prepare->setViewportSize(size());
+    get_mapview_scroll_pos(&x, &y);
+    scroll_prepare->setContentPos(QPointF(x, y));
+    return true;
+  } else if (event->type() == QEvent::Scroll &&
+      (scroll = dynamic_cast<QScrollEvent *>(event))) {
+    scroll->accept();
+    get_mapview_scroll_window(&xmin, &ymin, &xmax, &ymax, &x, &y);
+    set_mapview_scroll_pos(std::fmod(scroll->contentPos().x(), xmax - xmin),
+                           std::fmod(scroll->contentPos().y(), ymax - ymin));
+    return true;
+  }
+  return QWidget::event(event);
 }
 
 /**************************************************************************
