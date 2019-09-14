@@ -73,6 +73,18 @@ private:
 };
 
 /**************************************************************************
+  Filter to handle pinch zoom.
+**************************************************************************/
+class pinch_zoom_filter : public QObject
+{
+  Q_OBJECT
+  double factor;
+public:
+  pinch_zoom_filter(QObject *parent = nullptr);
+  bool eventFilter(QObject *, QEvent *event) override;
+};
+
+/**************************************************************************
   QWidget used for displaying map
 **************************************************************************/
 class map_view : public QWidget

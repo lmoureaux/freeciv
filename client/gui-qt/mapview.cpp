@@ -18,6 +18,7 @@
 #include <cmath>
 
 // Qt
+#include <QGestureEvent>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPixmap>
@@ -189,6 +190,55 @@ void mr_idle::add_callback(call_me_back* cb)
 }
 
 /**************************************************************************
+  Constructor
+**************************************************************************/
+pinch_zoom_filter::pinch_zoom_filter(QObject *parent) :
+  QObject(parent),
+  factor(1)
+{}
+
+/**************************************************************************
+  Handle gesture events for pinch
+**************************************************************************/
+bool pinch_zoom_filter::eventFilter(QObject *, QEvent *event)
+{
+  QGestureEvent *gevent;
+  QPinchGesture *pinch;
+  QPinchGesture::ChangeFlags flags;
+
+  if (event->type() != QEvent::Gesture) {
+    return false;
+  }
+  fc_assert_ret_val(gevent = dynamic_cast<QGestureEvent *>(event), false);
+
+  if (!(pinch = dynamic_cast<QPinchGesture *>(
+                                    gevent->gesture(Qt::PinchGesture)))) {
+    return false;
+  }
+
+  // This is an event from a pinch gesture
+  if (pinch->changeFlags() & QPinchGesture::ScaleFactorChanged) {
+    // Update zoom factor. We don't scale immediately because it's slow
+    // FIXME Should provide immediate visual feedback
+    factor *= pinch->scaleFactor();
+  }
+  if (pinch->state() == Qt::GestureFinished) {
+    // Zoom. This reloads the tileset
+    gui()->map_scale *= factor;
+    if (gui()->map_scale > 10) {
+      gui()->map_scale = 10;
+    } else if (gui()->map_scale < 0.1) {
+      gui()->map_scale = 0.1;
+    }
+    factor = 1;
+    tilespec_reread(tileset_basename(tileset), true, gui()->map_scale);
+  }
+
+  event->accept();
+  return true;
+}
+
+/**************************************************************************
   Constructor for map
 **************************************************************************/
 map_view::map_view() : QWidget()
@@ -204,6 +254,8 @@ map_view::map_view() : QWidget()
   setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
   setAttribute(Qt::WA_AcceptTouchEvents, true);
   QScroller::grabGesture(this, QScroller::TouchGesture);
+  grabGesture(Qt::PinchGesture);
+  installEventFilter(new pinch_zoom_filter(this));
 }
 
 /**************************************************************************
@@ -213,6 +265,8 @@ bool map_view::event(QEvent *event)
 {
   QScrollPrepareEvent *scroll_prepare;
   QScrollEvent *scroll;
+  QPinchGesture *gesture;
+  QGestureEvent *gesture_event;
   float xmin, ymin, xmax, ymax;
   int x, y;
 
