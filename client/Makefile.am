@@ -190,10 +190,10 @@ bin_PROGRAMS =
 noinst_LTLIBRARIES =
 
 clientlibs = \
- $(top_builddir)/common/scriptcore/libscriptcore.la \
  $(top_builddir)/client/agents/libagents.la \
  $(top_builddir)/client/luascript/libscripting_client.la \
  $(top_builddir)/dependencies/cvercmp/libcvercmp.la
+# $(top_builddir)/common/scriptcore/libscriptcore.la
 
 if CLIENT_GUI_GTK_2_0
 bin_PROGRAMS += freeciv-gtk2
@@ -296,7 +296,7 @@ lib_LTLIBRARIES = libfreeciv-qt.la
 #libfcgui_qt_la_SOURCES = $(freeciv_client_src)
 #libfcgui_qt_la_LIBADD = gui-qt/libgui-qt.la $(clientlibs)
 libfreeciv_qt_la_SOURCES = dummycxx.cpp $(freeciv_client_src) $(gui_interface_src)
-libfreeciv_qt_la_LDFLAGS = $(gui_qt_ldflags)
+libfreeciv_qt_la_LDFLAGS = $(gui_qt_ldflags) -avoid-version
 libfreeciv_qt_la_LIBADD = \
  -lQt5AndroidExtras \
  $(SOUND_LIBS) \

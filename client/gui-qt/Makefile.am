@@ -4,7 +4,7 @@ MOCCMD=@MOCCMD@
 
 include $(top_srcdir)/bootstrap/Makerules.mk
 
-lib_LTLIBRARIES = libgui-qt.la
+noinst_LTLIBRARIES = libgui-qt.la
 AM_CPPFLAGS = -I. -I$(srcdir)/.. -I$(srcdir)/../include -I$(top_srcdir)/utility \
         -I$(top_srcdir)/common -I$(srcdir)/../agents -I$(top_srcdir)/common/aicore \
         -I$(top_srcdir)/common/scriptcore -I$(srcdir)/../luascript \
@@ -109,10 +109,17 @@ libgui_qt_la_SOURCES = \
 	voteinfo_bar.cpp \
 	voteinfo_bar.h	\
 	wldlg.cpp	\
-	wldlg.h
+	wldlg.h         \
+	$(MOC_FILES)
 
-nodist_libgui_qt_la_SOURCES = $(MOC_FILES)
-#libgui_qt_la_LDFLAGS = $(gui_qt_ldflags)
-#libgui_qt_la_LIBADD = -lQt5AndroidExtras
+#noinst_libgui_qt_la_SOURCES = $(MOC_FILES)
+libgui_qt_la_LDFLAGS = $(gui_qt_ldflags) -avoid-version
+libgui_qt_la_LIBADD = \
+    $(gui_qt_libs) -lQt5AndroidExtras \
+    $(top_builddir)/common/libfreeciv.la \
+    $(clientlibs) \
+    $(INTLLIBS) $(CLIENT_LIBS) $(SOUND_LIBS) $(CLIENTICON) \
+    $(MAPIMG_WAND_LIBS)
+
 
 CLEANFILES = $(MOC_FILES)

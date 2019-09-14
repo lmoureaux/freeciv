@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-lib_LTLIBRARIES = \
+noinst_LTLIBRARIES = \
 	libscripting_client.la
 
 AM_CPPFLAGS = \
@@ -28,6 +28,8 @@ BUILT_SOURCES = \
 
 libscripting_client_la_LIBADD = \
 	$(LUA_LIBS) $(TOLUA_LIBS) $(LUASQL_LIBS)
+
+libscripting_client_la_LDFLAGS = -avoid-version
 
 tolua_client_gen.c tolua_client_gen.h: tolua_client.pkg
 	$(TOLUA) -n client -o $(srcdir)/tolua_client_gen.c \
