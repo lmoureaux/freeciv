@@ -2181,14 +2181,17 @@ void city_dialog::hideEvent(QHideEvent *event)
 void city_dialog::showEvent(QShowEvent *event)
 {
   if (gui()->qt_settings.city_geometry.isNull() == false) {
-    restoreGeometry(gui()->qt_settings.city_geometry);
+    //restoreGeometry(gui()->qt_settings.city_geometry);
     prod_unit_splitter->restoreState(gui()->qt_settings.city_splitter1);
     central_left_splitter->restoreState(gui()->qt_settings.city_splitter2);
     central_splitter->restoreState(gui()->qt_settings.city_splitter3);
-  } else {
-    QRect rect = QApplication::desktop()->screenGeometry();
-    resize((rect.width() * 4) / 5, (rect.height() * 5) / 6);
   }
+  /*
+  else {
+    QRect rect = QApplication::desktop()->screenGeometry();
+    resize(rect.size());
+  }
+  */
 }
 
 /****************************************************************************
@@ -3596,7 +3599,7 @@ void qtg_real_city_dialog_popup(struct city *pcity)
   }
 
   city_dlg->setup_ui(pcity);
-  city_dlg->show();
+  city_dlg->showMaximized();
   city_dlg->activateWindow();
   city_dlg->raise();
 }
