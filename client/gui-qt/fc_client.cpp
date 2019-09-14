@@ -155,7 +155,7 @@ void fc_client::init()
   if (gui_options.gui_qt_show_titlebar == false) {
     menu_bar->setCornerWidget(corner_wid);
   }
-  setMenuBar(menu_bar);
+  setMenuBar(new QMenuBar);
   status_bar = statusBar();
   status_bar_label = new QLabel;
   status_bar_label->setAlignment(Qt::AlignCenter);
@@ -349,7 +349,7 @@ void fc_client::switch_page(int new_pg)
   if (page == PAGE_NETWORK){
     destroy_server_scans();
   }
-  menuBar()->setVisible(false);
+  //menuBar()->setVisible(false);
   if (status_bar != nullptr) {
     status_bar->setVisible(true);
   }
@@ -380,7 +380,8 @@ void fc_client::switch_page(int new_pg)
       gui()->showFullScreen();
       gui()->game_tab_widget->showFullScreen();
     }
-    menuBar()->setVisible(true);
+    if (gui()->menuBar() && gui()->menuBar() != gui()->menu_bar) gui()->menuBar()->deleteLater();
+    gui()->setMenuBar(gui()->menu_bar);
     mapview_wdg->setFocus();
     center_on_something();
     voteinfo_gui_update();
