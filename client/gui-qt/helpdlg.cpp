@@ -201,11 +201,11 @@ void help_dialog::showEvent(QShowEvent *event)
   QList<int> sizes;
 
   if (gui()->qt_settings.help_geometry.isNull() == false) {
-    restoreGeometry(gui()->qt_settings.help_geometry);
+    //restoreGeometry(gui()->qt_settings.help_geometry);
     splitter->restoreState(gui()->qt_settings.help_splitter1);
   } else {
     QRect rect = QApplication::desktop()->screenGeometry();
-    resize((rect.width() * 3) / 5, (rect.height() * 3) / 6);
+    resize(rect.size());
     sizes << rect.width() / 10 << rect.width() / 3;
     splitter->setSizes(sizes);
   }
