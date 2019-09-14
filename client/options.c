@@ -122,7 +122,11 @@ struct client_options gui_options = {
   .ask_city_name = TRUE,
   .popup_new_cities = TRUE,
   .popup_actor_arrival = TRUE,
+#ifdef __ANDROID__
   .keyboardless_goto = TRUE,
+#else /* __ANDROID__ */
+  .keyboardless_goto = FALSE,
+#endif /* __ANDROID */
   .enable_cursor_changes = TRUE,
   .separate_unit_selection = FALSE,
   .unit_selection_clears_orders = TRUE,
