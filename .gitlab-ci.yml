@@ -1,0 +1,18 @@
+image: registry.gitlab.com/fdroid/ci-images-client:latest
+
+stages:
+  - deploy
+
+deploy_nightly:
+  stage: deploy
+  only:
+    - android-2.6
+  script:
+    - test -z "$DEBUG_KEYSTORE" && exit 0
+    # add this nightly repo as a enabled repo
+    - export versionCode=`printf '2.6-%05d' $(date '+%s'| cut -b4-8)`
+    # build the APKs!
+    - echo "doing something"
+    - echo "$ANDROID_SDK"
+    - echo "$ANDROID_NDK"
+    #- fdroid nightly -v

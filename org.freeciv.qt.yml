@@ -1,0 +1,35 @@
+Categories:
+  - Game
+License: GPL-3.0-or-later
+AuthorName: Freeciv Contributors
+AuthorEmail: freeciv-dev@freelists.org
+SourceCode: https://github.com/lmoureaux/freeciv/tree/android-2.6
+IssueTracker: http://forum.freeciv.org/f/viewtopic.php?p=101623
+Translation: http://www.hostedredmine.com/projects/freeciv/
+Changelog: http://forum.freeciv.org/f/viewtopic.php?p=101623
+
+AutoName: Freeciv
+Summary: \'cause civilization should be free
+Description: |-
+    Qt client for the Freeciv server (2.6)
+
+RepoType: git
+Repo: https://github.com/lmoureaux/freeciv.git
+
+Builds:
+  - versionName: nightly
+    versionCode: nightly
+    sudo: apt install -y tolua
+    commit: master
+    srclibs:
+      - QtBase@v5.13.1
+    prebuild:
+      - sed -i -e "806s/\"\$MAKE\"/\"\$MAKE\" -j $(nproc)/" $$QtBase$$/configure
+    build:
+      - ANDROID_SDK_ROOT="$$SDK$$" ANDROID_NDK_ROOT="$$NDK$$" echo $ANDROID_NDK_ROOT
+    ndk: 20.0.5594570
+
+AutoUpdateMode: none
+UpdateCheckMode: none
+CurrentVersion: nightly
+CurrentVersionCode: nightly
