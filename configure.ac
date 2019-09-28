@@ -15,6 +15,7 @@ AC_CONFIG_HEADERS([gen_headers/fc_config.h gen_headers/freeciv_config.h])
 AC_CANONICAL_HOST
 AC_USE_SYSTEM_EXTENSIONS
 AC_C_BIGENDIAN
+FC_ANDROID
 
 BUG_URL="$PACKAGE_BUGREPORT"
 WIKI_URL="http://www.freeciv.org/"
@@ -1185,6 +1186,7 @@ AM_CONDITIONAL(CLIENT_GUI_XAW, test "x$gui_xaw" = "xyes")
 AM_CONDITIONAL(CLIENT_GUI_QT, test "x$gui_qt" = "xyes")
 AM_CONDITIONAL(CLIENT_GUI_STUB, test "x$gui_stub" = "xyes")
 AM_CONDITIONAL(MINGW, test x"$MINGW" = "xyes")
+AM_CONDITIONAL(ANDROID, test x"$android" = "xyes")
 
 dnl Additional client libraries:
 if test "x$client" = "xyes"; then
@@ -1705,6 +1707,9 @@ AC_CONFIG_FILES([fcser:bootstrap/fcser.in], [chmod +x fcser])
 if test "x$ruledit" = "xyes" ; then
   AC_CONFIG_FILES([fcruledit:bootstrap/fcruledit.in], [chmod +x fcruledit])
 fi
+if test "x$android" = "xyes" ; then
+  AC_CONFIG_FILES([bootstrap/androiddeployqt-settings.json])
+fi
 
 AC_OUTPUT
 
@@ -1722,6 +1727,7 @@ AC_MSG_NOTICE([
 
   == Client ==
   Build freeciv client:  $client
+  Android target:        $android
 
   Maintained client frontends:
     Gtk-3.0:  $gui_gtk3

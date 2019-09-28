@@ -1,0 +1,16 @@
+{
+   "description": "",
+   "qt": "@qt5_root@",
+   "sdk": "@android_sdk_root@",
+   "sdkBuildToolsRevision": "29.0.2",
+   "ndk": "@android_ndk_root@",
+   "toolchain-prefix": "llvm",
+   "tool-prefix": "llvm",
+   "toolchain-version": "4.9",
+   "ndk-host": "linux-x86_64",
+   "target-architecture": "@android_architecture@",
+   "qml-root-path": "",
+   "stdcpp-path": "@android_ndk_root@/sources/cxx-stl/llvm-libc++/libs/@android_architecture@/libc++_shared.so",
+   "useLLVM": true,
+   "application-binary": ".apk-install/lib/libfreeciv-qt.so"
+}

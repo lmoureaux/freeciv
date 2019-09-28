@@ -102,3 +102,40 @@ doc:
 	doxy_srcdir="$(top_srcdir)/" doxygen $(top_srcdir)/doc/freeciv.doxygen
 
 .PHONY: src-check doc
+
+if ANDROID
+apk-install: all
+	@echo "Installing for apk"
+	$(RM) -r .apk-install
+	mkdir -p .apk-install
+	$(MAKE) -C . install DESTDIR=$$PWD/.apk-install
+
+freeciv-qt.apk: apk-install
+	@echo "Creating apk"
+#	Create package structure
+	mkdir -p .apk-build/assets/data
+	mkdir -p .apk-build/libs/$(android_architecture)
+#	Copy files (FIXME override install paths when Android is detected?)
+	cp -r .apk-install/share/freeciv/* .apk-build/assets/data
+	cp .apk-install/lib/*.so .apk-build/libs/$(android_architecture)
+#	FIXME JDK path is hard-coded
+	$(qt5_root)/bin/androiddeployqt \
+	  --output .apk-build \
+	  --input bootstrap/android/androiddeployqt-settings.json \
+	  --android-platform android-29 \
+	  --jdk /usr/lib/jvm/java-8-openjdk-amd64 \
+	  --gradle \
+	  --verbose \
+	  --no-strip
+	mv .apk-build//build/outputs/apk/debug/.apk-build-debug.apk freeciv-qt.apk
+
+apk: freeciv-qt.apk
+
+apk-clean:
+	$(RM) -r .apk-install
+	$(RM) -r .apk-build
+
+clean: apk-clean
+
+.PHONY: apk apk-clean apk-install
+endif

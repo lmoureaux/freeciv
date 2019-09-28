@@ -37,3 +37,6 @@
 /manual*.html
 /core
 /libtool
+# Android build
+*.apk
+/.apk-*
