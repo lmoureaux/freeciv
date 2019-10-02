@@ -45,10 +45,10 @@ AC_DEFUN([FC_ANDROID],
     # Host architecture (through --host)
     AC_MSG_CHECKING([the Android architecture])
     AS_CASE([$host_alias],
-      [armeabi-v7a-*], [android_architecture=armeabi-v7a],
-      [arm64-v8a-*],   [android_architecture=arm64-v8a],
-      [x86-*],         [android_architecture=x86],
-      [x86_64-*],      [android_architecture=x86_64],
+      [aarch64*], [android_architecture=arm64-v8a],
+      [armv7a*],  [android_architecture=armeabi-v7a],
+      [i686*],    [android_architecture=x86],
+      [x86_64*],  [android_architecture=x86_64],
       [
         android_architecture="not supported (\"$host_alias\")"
         android_complete=no
