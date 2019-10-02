@@ -121,7 +121,7 @@ freeciv-qt.apk: apk-install
 #	FIXME JDK path is hard-coded
 	$(qt5_root)/bin/androiddeployqt \
 	  --output .apk-build \
-	  --input bootstrap/android/androiddeployqt-settings.json \
+	  --input bootstrap/androiddeployqt-settings.json \
 	  --android-platform android-29 \
 	  --jdk /usr/lib/jvm/java-8-openjdk-amd64 \
 	  --gradle \
