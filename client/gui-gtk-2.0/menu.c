@@ -38,6 +38,7 @@
 #include "control.h"
 #include "mapview_common.h"
 #include "options.h"
+#include "savegame2.h"
 #include "tilespec.h"
 
 /* client/gui-gtk-2.0 */
@@ -153,6 +154,151 @@ static void reload_tileset_callback(GtkAction *action, gpointer data)
 static void save_game_callback(GtkAction *action, gpointer data)
 {
   send_save_game(NULL);
+}
+
+/****************************************************************
+  Action "CLIENT_SAVE_GAME" callback.
+*****************************************************************/
+static void client_save_game_callback(GtkAction *action, gpointer data)
+{
+  const char *orig_filename = "client-saved-game";
+  const char *save_reason = "manual";
+  bool scenario = FALSE;
+
+  char filepath[600];
+  char *dot, *filename;
+  struct section_file *file;
+  struct timer *timer_cpu, *timer_user;
+
+  if (!orig_filename) {
+    filepath[0] = '\0';
+    filename = filepath;
+  } else {
+    sz_strlcpy(filepath, orig_filename);
+    if ((filename = strrchr(filepath, '/'))) {
+      filename++;
+    } else {
+      filename = filepath;
+    }
+
+    /* Ignores the dot at the start of the filename. */
+    for (dot = filename; '.' == *dot; dot++) {
+      /* Nothing. */
+    }
+    if ('\0' == *dot) {
+      /* Only dots in this file name, consider it as empty. */
+      filename[0] = '\0';
+    } else {
+      char *end_dot;
+      char *strip_extensions[] = { ".sav", ".gz", ".bz2", ".xz", NULL };
+      bool stripped = TRUE;
+
+      while ((end_dot = strrchr(dot, '.')) && stripped) {
+	int i;
+        stripped = FALSE;
+
+	for (i = 0; strip_extensions[i] != NULL && !stripped; i++) {
+          if (!strcmp(end_dot, strip_extensions[i])) {
+            *end_dot = '\0';
+            stripped = TRUE;
+          }
+        }
+      }
+    }
+  }
+
+  /* If orig_filename is NULL or empty, use a generated default name. */
+  if (filename[0] == '\0'){
+    /* manual save */
+    generate_save_name("clone", filename,
+                       sizeof(filepath) + filepath - filename, "manual");
+  }
+
+  timer_cpu = timer_new(TIMER_CPU, TIMER_ACTIVE);
+  timer_start(timer_cpu);
+  timer_user = timer_new(TIMER_USER, TIMER_ACTIVE);
+  timer_start(timer_user);
+
+  /* Allowing duplicates shouldn't be allowed. However, it takes very too
+   * long time for huge game saving... */
+  file = secfile_new(TRUE);
+  client_savegame2_save(file, save_reason, scenario);
+
+  /* Append ".sav" to filename. */
+  sz_strlcat(filepath, ".sav");
+
+  if (1 > 0) {
+    switch (FZ_XZ) {
+#ifdef HAVE_LIBZ
+    case FZ_ZLIB:
+      /* Append ".gz" to filename. */
+      sz_strlcat(filepath, ".gz");
+      break;
+#endif
+#ifdef HAVE_LIBBZ2
+    case FZ_BZIP2:
+      /* Append ".bz2" to filename. */
+      sz_strlcat(filepath, ".bz2");
+      break;
+#endif
+#ifdef HAVE_LIBLZMA
+   case FZ_XZ:
+      /* Append ".xz" to filename. */
+      sz_strlcat(filepath, ".xz");
+      break;
+#endif
+    case FZ_PLAIN:
+      break;
+    default:
+//       log_error(_("Unsupported compression type %d."),
+//                 game.server.save_compress_type);
+//       notify_conn(NULL, NULL, E_SETTING, ftc_warning,
+//                   _("Unsupported compression type %d."),
+//                   game.server.save_compress_type);
+      break;
+    }
+  }
+
+//   if (!path_is_absolute(filepath)) {
+//     char tmpname[600];
+//
+//     if (!scenario) {
+//       /* Ensure the saves directory exists. */
+//       make_dir(srvarg.saves_pathname);
+//
+//       sz_strlcpy(tmpname, srvarg.saves_pathname);
+//     } else {
+//       /* Make sure scenario directory exist */
+//       make_dir(srvarg.scenarios_pathname);
+//
+//       sz_strlcpy(tmpname, srvarg.scenarios_pathname);
+//     }
+//
+//     if (tmpname[0] != '\0') {
+//       sz_strlcat(tmpname, "/");
+//     }
+//     sz_strlcat(tmpname, filepath);
+//     sz_strlcpy(filepath, tmpname);
+//   }
+
+  if (!secfile_save(file, filepath, 1,
+                    FZ_XZ)) {
+    log_error("Game saving failed: %s", secfile_error());
+  } else {
+    log_normal("Game saved as %s", filepath);
+  }
+
+  secfile_destroy(file);
+
+#ifdef LOG_TIMERS
+  log_verbose("Save time: %g seconds (%g apparent)",
+              timer_read_seconds(timer_cpu), timer_read_seconds(timer_user));
+#endif
+
+  timer_destroy(timer_cpu);
+  timer_destroy(timer_user);
+
+//   ggz_game_saved(filepath);
 }
 
 /****************************************************************
@@ -1356,6 +1502,8 @@ static GtkActionGroup *get_safe_group(void)
        "<Control><Alt>r", NULL, G_CALLBACK(reload_tileset_callback)},
       {"GAME_SAVE", GTK_STOCK_SAVE, _("_Save Game"),
        NULL, NULL, G_CALLBACK(save_game_callback)},
+      {"CLIENT_GAME_SAVE", GTK_STOCK_SAVE, _("_Clone Map"),
+       NULL, NULL, G_CALLBACK(client_save_game_callback)},
       {"GAME_SAVE_AS", GTK_STOCK_SAVE_AS, _("Save Game _As..."),
        NULL, NULL, G_CALLBACK(save_game_as_callback)},
       {"MAPIMG_SAVE", NULL, _("Save Map _Image"),

@@ -4447,6 +4447,10 @@ static bool sg_load_player_city(struct loaddata *loading, struct player *plr,
   sg_warn_ret_val(pcity->production.kind != universals_n_invalid(), FALSE,
                   "%s.currently_building: unknown \"%s\" \"%s\".",
                   citystr, kind, name);
+  if (pcity->production.kind != VUT_IMPROVEMENT && pcity->production.kind != VUT_UTYPE) {
+    sg_warn(FALSE, "%s.currently_building: invalid \"%s\" \"%s\".", citystr, kind, name);
+    city_choose_build_default(pcity);
+  }
 
   kind = secfile_lookup_str(loading->file, "%s.changed_from_kind",
                             citystr);

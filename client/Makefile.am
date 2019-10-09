@@ -69,6 +69,10 @@ endif
 SUBDIRS = $(GUI_SUBDIRS) $(CLI_INCLUDE) agents luascript
 
 AM_CPPFLAGS = \
+	-I$(top_srcdir)/server \
+	-I$(top_srcdir)/server/advisors \
+	-I$(top_srcdir)/server/generator \
+	-I$(top_srcdir)/server/scripting \
 	-I$(top_srcdir)/utility -I$(srcdir)/include \
 	-I$(top_srcdir)/common -I$(top_srcdir)/common/aicore \
 	-I$(top_srcdir)/common/scriptcore \
@@ -135,6 +139,8 @@ freeciv_client_src = $(AUDIO_SDL_FILES) \
 	repodlgs_common.h \
 	reqtree.c \
 	reqtree.h \
+	savegame2.c	\
+	savegame2.h	\
 	servers.c		\
 	servers.h		\
 	text.c	\
@@ -173,6 +179,7 @@ bin_PROGRAMS =
 noinst_LTLIBRARIES =
 
 clientlibs = \
+ $(top_builddir)/server/libfreeciv-srv.la \
  $(top_builddir)/common/scriptcore/libscriptcore.la \
  $(top_builddir)/client/agents/libagents.la \
  $(top_builddir)/client/luascript/libscripting_client.la \
@@ -184,7 +191,7 @@ noinst_LTLIBRARIES += libfcgui-gtk2.la
 libfcgui_gtk2_la_SOURCES = $(freeciv_client_src)
 libfcgui_gtk2_la_LIBADD = gui-gtk-2.0/libgui-gtk2.la $(clientlibs)
 freeciv_gtk2_SOURCES = dummy.c
-freeciv_gtk2_LDFLAGS = $(gui_gtk2_ldflags) $(GGZMOD_ldflags)
+freeciv_gtk2_LDFLAGS = $(gui_gtk2_ldflags) $(GGZMOD_ldflags) -Wl,--allow-multiple-definition
 freeciv_gtk2_LDADD = \
  $(SOUND_LIBS) \
  libfcgui-gtk2.la \
