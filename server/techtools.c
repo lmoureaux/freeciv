@@ -529,6 +529,7 @@ static bool lose_tech(struct player *plr)
 ****************************************************************************/
 bool update_bulbs(struct player *plr, int bulbs, bool check_tech)
 {
+  int restored_bulbs;
   struct player_research *research = player_research_get(plr);
 
   if (!plr->is_alive) {
@@ -573,8 +574,11 @@ bool update_bulbs(struct player *plr, int bulbs, bool check_tech)
 
     if (tech != A_NONE) {
       if (game.server.techloss_restore >= 0) {
-        research->bulbs_researched += base_total_bulbs_required(plr, tech, TRUE)
-          * game.server.techloss_restore / 100;
+        restored_bulbs = base_total_bulbs_required(plr, tech, TRUE)
+                    * game.server.techloss_restore / 100;
+        research->bulbs_researched += restored_bulbs;
+        plr->economic.gold -= restored_bulbs
+                    * game.server.techloss_restore_cost / 100;
       } else {
         research->bulbs_researched = 0;
       }

@@ -1663,6 +1663,16 @@ static struct setting settings[] = {
 	  GAME_MIN_TECHLOSSREST, GAME_MAX_TECHLOSSREST,
 	  GAME_DEFAULT_TECHLOSSREST)
 
+ GEN_INT("techrestorecost", game.server.techloss_restore_cost,
+	  SSET_RULES, SSET_SCIENCE, SSET_RARE, SSET_TO_CLIENT,
+	  N_("Cost of restoring research points"),
+          N_("This is the amount of gold one needs to pay when bulbs are "
+             "restored after losing a tech (see 'techlossrestore'), as a "
+             "percentage of the number of bulbs restored."),
+          NULL, NULL,
+	  GAME_MIN_TECHRESTCOST, GAME_MAX_TECHRESTCOST,
+	  GAME_DEFAULT_TECHRESTCOST)
+
   GEN_INT("foodbox", game.info.foodbox,
 	  SSET_RULES, SSET_ECONOMICS, SSET_SITUATIONAL, SSET_TO_CLIENT,
 	  N_("Food required for a city to grow"),
