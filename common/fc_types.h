@@ -448,6 +448,9 @@ BV_DEFINE(bv_startpos_nations, MAX_NUM_STARTPOS_NATIONS);
 /* Tech upkeep multiplied by number of cities */
 #define SPECENUM_VALUE2 TECH_UPKEEP_PER_CITY
 #define SPECENUM_VALUE2NAME "Cities"
+/* Tech upkeep multiplied by number of citizens */
+#define SPECENUM_VALUE3 TECH_UPKEEP_PER_POPULATION
+#define SPECENUM_VALUE3NAME "Population"
 #include "specenum_gen.h"
 
 /* Used in the network protocol. */

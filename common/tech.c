@@ -441,6 +441,7 @@ int player_tech_upkeep(const struct player *pplayer)
   double tech_upkeep = 0.0;
   double total_research_factor;
   int members;
+  citizens population;
 
   if (TECH_UPKEEP_NONE == game.info.tech_upkeep_style) {
     return 0;
@@ -519,6 +520,14 @@ int player_tech_upkeep(const struct player *pplayer)
   case TECH_UPKEEP_PER_CITY:
     tech_upkeep -= get_player_bonus(pplayer, EFT_TECH_UPKEEP_FREE);
     tech_upkeep *= city_list_size(pplayer->cities);
+    break;
+  case TECH_UPKEEP_PER_POPULATION:
+    tech_upkeep -= get_player_bonus(pplayer, EFT_TECH_UPKEEP_FREE);
+    population = 0;
+    city_list_iterate(pplayer->cities, pcity) {
+        population += pcity->size;
+    } city_list_iterate_end
+    tech_upkeep *= population;
     break;
   case TECH_UPKEEP_NONE:
     fc_assert(game.info.tech_upkeep_style != TECH_UPKEEP_NONE);
